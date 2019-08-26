@@ -21,7 +21,7 @@ mk_sysroot
   [NeedsWork]
 
 * Developing a Portable Infrastructure for Component-Oriented QA/Support
-  with pkgsrc and arbitrary distribution upstream source code providers
+  with pkgsrc and arbitrary upstream source code distributions
   [WorkInProgress]
 
 ## Platforms Tested - sysroot with pkgsrc
@@ -149,7 +149,7 @@ mk_sysroot
         * TBD: Integrating launchd (pkgsrc) within the host service
           framework, under one or more system profiles: Build-host
           sysroot runtime; Build-host container runtime; Cross-build and
-          install for emulator/mobile Runtime
+          install for emulator/mobile runtime
         * Note daemontools supervise(8)
 
 <!--  LocalWords:  mk sysroot LFS LLVM toolchain pkgsrc WorkInProgress
