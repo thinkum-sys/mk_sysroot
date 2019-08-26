@@ -30,13 +30,22 @@ mk_sysroot
     * Bootstrap toolchain: LLVM 4 (Debian 8)
     * Note: pkgsrc cwrappers disabled during bootstrap, built and
       enabled post-bootstrap
-    * Note: "Needs QA" primarily due to concerns pursuant of updating
-      to newer distsrc in pkgsrc
-    * Note: Toolchain boostrap - pkgsrc LLVM 8, GCC 8 builds --
-      configuration and testing for **sysroot bytecode isolation**
+    * Note: "Needs QA," primarily due to concerns pursuant of:
+        * (A) updating to newer distsrc for some ports in pkgsrc,
+          pursuant to active support in upstream development projects
+          and site-local integration for built components
+        * (B) addressing concerns that may be entailed of a lack of
+          bytecode isolation in the initial usage case - in effect,
+          pursuant to numerous link-time build failures
+        * (C) addressing any particular characteristics of individual
+          source systems -- common concerns, e.g providing a `--tag=cc`
+          option for `libtool` in individual builds.
+    * Note: **Toolchain bootstrap** -- with pkgsrc LLVM 8, GCC 8 builds
+      --  configuration and testing for **sysroot bytecode isolation**
       [FIXME]
-    * Note: Userspace bootstrap (mk_sysroot project on Linux - primary
-      initial usage case)
+    * Note: Userspace bootstrap for the mk_sysroot project on Linux -
+      primary initial usage case - Components (tmux, BASH, editor, git,
+      ...)
 
 * FreeBSD 11.2 (amd64)
     * Bootstrap toolchain: LLVM 8 (FreeBSD ports)
@@ -173,5 +182,5 @@ mk_sysroot
  -->
 <!--  LocalWords:  LDAP OSI FreeRadius rsyslog systemd launchd runtime
  -->
-<!--  LocalWords:  daemontools
+<!--  LocalWords:  daemontools libtool tmux
  -->
