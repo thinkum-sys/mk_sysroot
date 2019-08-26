@@ -32,17 +32,24 @@ mk_sysroot
       enabled post-bootstrap
     * Note: "Needs QA" primarily due to concerns pursuant of updating
       to newer distsrc in pkgsrc
-    * Note: GCC 8 and LLVM 8 built post-build -- no sysroot bytecode
-      isolation [FIXME]
+    * Note: Toolchain boostrap - pkgsrc LLVM 8, GCC 8 builds --
+      configuration and testing for **sysroot bytecode isolation**
+      [FIXME]
+    * Note: Userspace bootstrap (mk_sysroot project on Linux - primary
+      initial usage case)
 
 * FreeBSD 11.2 (amd64)
     * Bootstrap toolchain: LLVM 8 (FreeBSD ports)
     * Note: pkgsrc cwrappers disabled during bootstrap and subsequently
     * Note: "Needs QA" primarily due to link-time errors, `-lgcc`, `-lgcc_s`
     * Note: GCC 8 and LLVM 8 built post-build -- see previous remarks
+    * Note: QA/Testing for build configuration (mk_sysroot project on
+      FreeBSD - primary initial usage case) (NB: "Control Group"
+      metaphor for site-local QA/support with a site-local pkgsrc
+      build configuration)
 
 * Ubuntu 16.04 userspace chroot under Android 4 (Linux 3.4.39) (armv7l) [New]
-    * Bootstrap toolchain: TBD
+    * Bootstrap toolchain: TBD (LLVM 6)
 
 ## Additional Remarks - Support Profiles
 
@@ -101,8 +108,6 @@ mk_sysroot
 * System Profile - Build and Install within **Sysroot on Linux**
 
 * System Profile - Build and Install within **Sysroot on FreeBSD**
-    * NB/Generalized Topic: Q/A "Control Group" for site-local pkgsrc
-      builds
 
 * System Profile - Build with PC Linux/amd64 Sysroot, Install to
       **Mobile Linux/ARM Sysroot** e.g Android chroot or Termux Sysroot
