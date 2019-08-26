@@ -44,7 +44,7 @@ mk_sysroot
 * Ubuntu 16.04 userspace chroot under Android 4 (Linux 3.4.39) (armv7l) [New]
     * Bootstrap toolchain: TBD
 
-## Additional Remarks
+## Additional Remarks - Support Profiles
 
 * QA/Support - Infrastructure
     * Note Debian Alioth (Web-Based Q/A Infrastructure)
@@ -61,6 +61,7 @@ mk_sysroot
         * Linux LXC
             * Note libvirt support [[href](https://libvirt.org/drvlxc.html)]
         * Post-Open Solaris (??)
+        * Note: Android chroot as a subset of container filesystems
         * POSIX-Like Host Namespace APIs
     * Special Concerns
         * Host Security Models
@@ -90,7 +91,7 @@ mk_sysroot
             * libvirt XML configuration for Emulator Systems
             * libvirt with QEMU _system_ (hyperv??) and _user_
               (userspace??) **emulator drivers**
-                * Note that Some hyperv support (e.g _vis a vis_ bhyve)
+                * Note that some hyperv support (e.g _vis a vis_ bhyve)
                   may preclude any simultaneous usage of other hyperv
                   support (e.g _vis a vis_ VirtualBox) on some hosts
                   operating system architectures (e.g FreeBSD)
@@ -112,6 +113,45 @@ mk_sysroot
 
 * System Profile - Other: Support TBD
 
+## Additional Remarks - Userspace Concerns
+
+* Generalized Concept: Uniform userspace environment, for development
+  and support -- Linux and FreeBSD hosts; specialized Android mobile
+  environments
+
+* Generalized Topic: Site Clouds and Host Systems - Generalized Concerns
+    * Generalized Trust and User Identity
+        * Note user identity methods on supported host platforms -  UNIX
+          hosts
+        * Note _trusted third party_ systems for user authentication in
+          network infrastructure systems, such as with Kerberos 5
+          and GSS-API; Vague analogy for web-based systems in OAUTH2
+    * Network Architectures
+        * IPv4 and IPv6 Adoption
+        * Network Management
+            * Host-specific system management methods for network
+              interface configuration, network route configuration,
+              nameservice configuration and name provisioning, and
+              configuration and provisioning for network messaging
+              services; note IPv4 and IPv6 management services as a
+              subset of name provisioning services; note "Trust" layers
+              for network routing, networking naming, and network
+              messaging services
+            * LDAP and the Open Systems Interconnect (OSI) Model
+            * FreeRadius is not Active Directory
+            * rsyslog(8)
+    * Filesystems - Storage Devices, Filesystem Formats, Storage
+      Provisioning, Filesystem Backup, and Data Recovery Services
+        * See also: Generalized Trust and User Identity
+    * Host-Based Service Frameworks
+        * Note BSD RC
+        * Note systemd on Linux
+        * TBD: Integrating launchd (pkgsrc) within the host service
+          framework, under one or more system profiles: Build-host
+          sysroot runtime; Build-host container runtime; Cross-build and
+          install for emulator/mobile Runtime
+        * Note daemontools supervise(8)
+
 <!--  LocalWords:  mk sysroot LFS LLVM toolchain pkgsrc WorkInProgress
  -->
 <!--  LocalWords:  NeedsWork amd cwrappers distsrc bytecode FIXME lgcc
@@ -124,5 +164,9 @@ mk_sysroot
  -->
 <!--  LocalWords:  OpenStack QEMU VirtualBox hyperv vis bhyve Termux
  -->
-<!--  LocalWords:  Maemo
+<!--  LocalWords:  Maemo filesystems Kerberos GSS OAUTH IPv nameservice
+ -->
+<!--  LocalWords:  LDAP OSI FreeRadius rsyslog systemd launchd runtime
+ -->
+<!--  LocalWords:  daemontools
  -->
