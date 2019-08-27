@@ -75,10 +75,18 @@ mk_sysroot
     * Generalization -> Implementation
         * FreeBSD Jail Containers
         * Linux LXC
-            * Note libvirt support [[href](https://libvirt.org/drvlxc.html)]
-        * Post-Open Solaris (??)
+          ([overview](https://linuxcontainers.org/lxc/introduction/#components) 
+          and [manual pages](https://linuxcontainers.org/lxc/manpages/))
+        * Container Systems Post-Open Solaris (??)
         * Note: Android chroot as a subset of container filesystems
         * POSIX-Like Host Namespace APIs
+        * Note: Availability of the container filesystem in the
+          container host; Availability  of conventional UNIX filesystem
+          APIs for accessing the jail container within the host
+          (**TBD:** Container filesystem isolation, previous
+          to/subsequent of container initialization)
+        * Note: Availability of the container filesystem within the
+          container service context (same APIs)
     * Special Concerns
         * Host Security Models
             * BSD MAC
@@ -87,6 +95,7 @@ mk_sysroot
             * POSIX 1003.1e - The International Standard that Wasn't (??)
         * libvirt
             * libvirt XML configuration for Container Systems
+            * Linux host systems - note [LXC container driver](https://libvirt.org/drvlxc.html) for libvirt
 
 * System Profile - Install to **Hypervirtualized Guest Filesystem**
     * Generalization -> Implementation
