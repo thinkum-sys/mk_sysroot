@@ -1,0 +1,11 @@
+diff --git a/textproc/expat/PLIST b/textproc/expat/PLIST
+index 1e3b71d..d11f811 100644
+--- a/textproc/expat/PLIST
++++ b/textproc/expat/PLIST
+@@ -1,5 +1,6 @@
+ @comment $NetBSD: PLIST,v 1.13 2019/06/29 22:36:04 wiz Exp $
+ bin/xmlwf
++man/man1/xmlwf.1
+ include/expat.h
+ include/expat_config.h
+ include/expat_external.h
