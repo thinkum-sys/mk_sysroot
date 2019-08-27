@@ -6,13 +6,15 @@ set -e
 
 SELF=$(git config user.email)
 
-PRETTY_FORMAT="----------%n\
+GIT_FORMAT=${GIT_FORMAT:-"----------%n\
 Changeset: %h (Parents: %p)%n\
 Refs: %d%n\
 Date: %ai%n\
 Author: %aN <%aE>%n\
 Log: %s%n\
-%b"
+%b"}
 
-exec git log --author="${SELF}" --name-status \
-    --pretty="tformat:${PRETTY_FORMAT}" "$@"
+GIT_STATUS=${GIT_STATUS:---name-status}
+
+exec git log --author="${SELF}" ${GIT_STATUS} \
+    --pretty="tformat:${GIT_FORMAT}" "$@"
