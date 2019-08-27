@@ -1,0 +1,161 @@
+diff --git a/musl/Makefile b/musl/Makefile
+index 19a4b03d7a..82fc65b67c 100644
+--- a/musl/Makefile
++++ b/musl/Makefile
+@@ -1,6 +1,6 @@
+ # $NetBSD$
+ 
+-DISTNAME=	musl-1.1.15
++DISTNAME=	musl-1.1.23
+ CATEGORIES=	devel
+ MASTER_SITES=	http://www.musl-libc.org/releases/
+ 
+diff --git a/musl/PLIST b/musl/PLIST
+index 891e28f6ee..19f42ff458 100644
+--- a/musl/PLIST
++++ b/musl/PLIST
+@@ -4,8 +4,8 @@ musl/include/alloca.h
+ musl/include/ar.h
+ musl/include/arpa/ftp.h
+ musl/include/arpa/inet.h
+-musl/include/arpa/nameser.h
+ musl/include/arpa/nameser_compat.h
++musl/include/arpa/nameser.h
+ musl/include/arpa/telnet.h
+ musl/include/arpa/tftp.h
+ musl/include/assert.h
+@@ -15,15 +15,19 @@ musl/include/bits/errno.h
+ musl/include/bits/fcntl.h
+ musl/include/bits/fenv.h
+ musl/include/bits/float.h
++musl/include/bits/hwcap.h
+ musl/include/bits/io.h
+-musl/include/bits/ioctl.h
+ musl/include/bits/ioctl_fix.h
++musl/include/bits/ioctl.h
+ musl/include/bits/ipc.h
++musl/include/bits/kd.h
+ musl/include/bits/limits.h
++musl/include/bits/link.h
+ musl/include/bits/mman.h
+ musl/include/bits/msg.h
+ musl/include/bits/poll.h
+ musl/include/bits/posix.h
++musl/include/bits/ptrace.h
+ musl/include/bits/reg.h
+ musl/include/bits/resource.h
+ musl/include/bits/sem.h
+@@ -31,13 +35,14 @@ musl/include/bits/setjmp.h
+ musl/include/bits/shm.h
+ musl/include/bits/signal.h
+ musl/include/bits/socket.h
++musl/include/bits/soundcard.h
+ musl/include/bits/stat.h
+ musl/include/bits/statfs.h
+-musl/include/bits/stdarg.h
+ musl/include/bits/stdint.h
+ musl/include/bits/syscall.h
+ musl/include/bits/termios.h
+ musl/include/bits/user.h
++musl/include/bits/vt.h
+ musl/include/byteswap.h
+ musl/include/complex.h
+ musl/include/cpio.h
+@@ -77,19 +82,19 @@ musl/include/mntent.h
+ musl/include/monetary.h
+ musl/include/mqueue.h
+ musl/include/net/ethernet.h
+-musl/include/net/if.h
+ musl/include/net/if_arp.h
++musl/include/net/if.h
+ musl/include/net/route.h
+ musl/include/netdb.h
+ musl/include/netinet/ether.h
+ musl/include/netinet/icmp6.h
+ musl/include/netinet/if_ether.h
+ musl/include/netinet/igmp.h
+-musl/include/netinet/in.h
+ musl/include/netinet/in_systm.h
++musl/include/netinet/in.h
++musl/include/netinet/ip_icmp.h
+ musl/include/netinet/ip.h
+ musl/include/netinet/ip6.h
+-musl/include/netinet/ip_icmp.h
+ musl/include/netinet/tcp.h
+ musl/include/netinet/udp.h
+ musl/include/netpacket/packet.h
+@@ -102,8 +107,8 @@ musl/include/pwd.h
+ musl/include/regex.h
+ musl/include/resolv.h
+ musl/include/sched.h
+-musl/include/scsi/scsi.h
+ musl/include/scsi/scsi_ioctl.h
++musl/include/scsi/scsi.h
+ musl/include/scsi/sg.h
+ musl/include/search.h
+ musl/include/semaphore.h
+@@ -117,8 +122,8 @@ musl/include/stdbool.h
+ musl/include/stdc-predef.h
+ musl/include/stddef.h
+ musl/include/stdint.h
+-musl/include/stdio.h
+ musl/include/stdio_ext.h
++musl/include/stdio.h
+ musl/include/stdlib.h
+ musl/include/stdnoreturn.h
+ musl/include/string.h
+@@ -141,6 +146,7 @@ musl/include/sys/ioctl.h
+ musl/include/sys/ipc.h
+ musl/include/sys/kd.h
+ musl/include/sys/klog.h
++musl/include/sys/membarrier.h
+ musl/include/sys/mman.h
+ musl/include/sys/mount.h
+ musl/include/sys/msg.h
+@@ -152,6 +158,7 @@ musl/include/sys/prctl.h
+ musl/include/sys/procfs.h
+ musl/include/sys/ptrace.h
+ musl/include/sys/quota.h
++musl/include/sys/random.h
+ musl/include/sys/reboot.h
+ musl/include/sys/reg.h
+ musl/include/sys/resource.h
+@@ -209,7 +216,6 @@ musl/include/wait.h
+ musl/include/wchar.h
+ musl/include/wctype.h
+ musl/include/wordexp.h
+-musl/lib/Scrt1.o
+ musl/lib/crt1.o
+ musl/lib/crti.o
+ musl/lib/crtn.o
+@@ -224,3 +230,4 @@ musl/lib/librt.a
+ musl/lib/libutil.a
+ musl/lib/libxnet.a
+ musl/lib/rcrt1.o
++musl/lib/Scrt1.o
+diff --git a/musl/TODO b/musl/TODO
+index 2ca8f72c1a..7c0e72d9ec 100644
+--- a/musl/TODO
++++ b/musl/TODO
+@@ -1,2 +1,4 @@
+-This package has known vulnerabilities, please investigate and fix if possible:
+- CVE-2015-1817, CVE-2017-15650
++musl - obsolete versions https://www.musl-libc.org/oldversions.html
++CVE-2015-1817	- versions 0.9.15 to 1.0.4, 1.1.0 to 1.1.7 affected
++CVE-2016-8859	- versions previous to 1.16 affected
++CVE-2017-15650	- versions 1.1.2 to 1.1.16 affected
+diff --git a/musl/distinfo b/musl/distinfo
+index 3547848f65..8a32847811 100644
+--- a/musl/distinfo
++++ b/musl/distinfo
+@@ -1,6 +1,6 @@
+ $NetBSD$
+ 
+-SHA1 (musl-1.1.15.tar.gz) = 027c3ae2182fa53c2b554ca98a28dc5cfca4b2c3
+-RMD160 (musl-1.1.15.tar.gz) = 9c0f1a71f7099cb116808683dd5fb6363f389ac8
+-SHA512 (musl-1.1.15.tar.gz) = 9e923572c0d6bad3dc2d2646d4b0699c10b477ce6300ac6c6224895192a90667f581ddf6eda2ab8c4c16f47bde4bccb03bb90478638d136d9df721430f4d0163
+-Size (musl-1.1.15.tar.gz) = 911600 bytes
++SHA1 (musl-1.1.23.tar.gz) = 98f3991d67e0e11dd091eb65890285d8417c7d05
++RMD160 (musl-1.1.23.tar.gz) = fd2053829f7349c2411ab75f45df95b9d46170bb
++SHA512 (musl-1.1.23.tar.gz) = a2278de9903852b08352d3e734a39d4616caa602496997ba843e8fea0e1c481761776745faf04536a149d1c4af416b68df681b6fbc9ae2de8794e18c2e853b09
++Size (musl-1.1.23.tar.gz) = 1013779 bytes
