@@ -1,0 +1,44 @@
+diff --git a/mk/docbook2X.buildlink3.mk b/mk/docbook2X.buildlink3.mk
+new file mode 100644
+index 00000000000..caddddfec7f
+--- /dev/null
++++ b/mk/docbook2X.buildlink3.mk
+@@ -0,0 +1,28 @@
++# $NetBSD$
++#
++# This Makefile fragment is meant to be included by ports that require
++# a docbook2X implementation during build, as set via DOCBOOK_TO_MAN
++#
++# === Variables set by this file ===
++#
++# DOCBOOK2X_TYPE
++#	The name of the selected docbook2X implementation.
++#       One of: docbook2X, docbook2x, xmlto
++
++.include "bsd.fast.prefs.mk"
++
++DOCBOOK2X_TYPE?=			xmlto
++
++## distpatch on DOCBOOK2X_TYPE to set 'configure' environment variable DOCBOOK_TO_MAN
++
++.if !empty(DOCBOOK2X_TYPE:Mxmlto)
++CONFIGURE_ENV+= DOCBOOK_TO_MAN="xmlto man --skip-validation"
++BUILD_DEPENDS+= xmlto:../../textproc/xmlto
++
++.elif !empty(DOCBOOK2X_TYPE:Mdocbook2[Xx])
++CONFIGURE_ENV+= DOCBOOK_TO_MAN="docbook2man"
++BUILD_DEPENDS+= docbook2X:../../wip/docbook2X
++
++.else
++PKG_FAIL_REASON		+="Unrecognized DOCBOOK2X_TYPE ${DOCBOOK2X_TYPE}"
++.endif
+diff --git a/textproc/expat/Makefile b/textproc/expat/Makefile
+index e247b5213ab..cbbbde0b1a1 100644
+--- a/textproc/expat/Makefile
++++ b/textproc/expat/Makefile
+@@ -28,4 +28,5 @@ post-install:
+ 	${INSTALL_DATA} ${WRKSRC}/doc/reference.html ${DESTDIR}${DOCDIR}
+ 	${INSTALL_DATA} ${WRKSRC}/doc/style.css ${DESTDIR}${DOCDIR}
+ 
++.include "../../mk/docbook2X.buildlink3.mk"
+ .include "../../mk/bsd.pkg.mk"
