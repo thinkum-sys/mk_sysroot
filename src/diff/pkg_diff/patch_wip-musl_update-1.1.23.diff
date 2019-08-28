@@ -1,3 +1,48 @@
+Summary: Update wip/musl for 1.1.23
+
+Description:
+
+TBD - cf. musl 1.0.0 Reference Manual, available on the web
+at https://www.musl-libc.org/doc/1.0.0/manual.html 
+
+Vulernabilities denoted in CVE-2015-1817, CVE-2016-8859, and
+CVE-2017-15650 have been addressed in this release of musl libc. More
+information about affected versions is available at the musl libc web
+site, page https://www.musl-libc.org/oldversions.html
+
+# Additional Remarks
+
+TBD: musl dynlib support onto pkg LOCALBASE (CFLAGS, LDFLAGS,
+compile-time linker, runtime linker @ host/sysroot, other)
+
+TBD: pkgsrc-wip support for host component dependency per special
+filesystem types -- e.g Linux procfs, Linux devpts, and devfs
+filesystems. (May be addressed via MESSAGE text, though this in itself
+would not provide any systems management support)
+
+TBD: musl libc test with BSD devfs
+
+TBD: mk-file support for Common libc features e.g for CFLAFGS, LDFLAGS,
+and dynlib linker support - wip musl libc, wip glibc, bionic libc,
+uclibc, other libc (Assuming: bionic libc, uclibc available in wip)
+
+TBD: libc and MK_SYSROOT - usage cases, specifications for build
+environment and test environment systems. (See also: LFS)
+
+# Changeset Information
+
+Local author: Sean Champ <spchamp@users.noreply.github.com>
+
+Changeset:  TBD1
+
+Changeset filter @ pkgsrc-wip: musl
+
+Upstream parent changeset @ pkgsrc-wip: TBD3
+Local parent changeset @ thinkum pkgsrc-wip contrib: TBD4
+
+i.e git diff TBD3 TBD1 bootstrap/bootstrap
+
+
 diff --git a/musl/Makefile b/musl/Makefile
 index 19a4b03d7a..82fc65b67c 100644
 --- a/musl/Makefile
@@ -140,7 +185,7 @@ index 2ca8f72c1a..7c0e72d9ec 100644
 @@ -1,2 +1,4 @@
 -This package has known vulnerabilities, please investigate and fix if possible:
 - CVE-2015-1817, CVE-2017-15650
-+musl - obsolete versions https://www.musl-libc.org/oldversions.html
++musl - obsolete versions 
 +CVE-2015-1817	- versions 0.9.15 to 1.0.4, 1.1.0 to 1.1.7 affected
 +CVE-2016-8859	- versions previous to 1.16 affected
 +CVE-2017-15650	- versions 1.1.2 to 1.1.16 affected
