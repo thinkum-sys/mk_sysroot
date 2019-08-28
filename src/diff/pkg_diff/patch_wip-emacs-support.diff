@@ -1,3 +1,48 @@
+Summary: Update emacs-git and emacs-nox11-git ports
+
+Description:
+
+This patch corresponds to a patch on pkgsrc main ports tree:
+patch_emacs27-support.diff
+
+* Update PLIST for emacs-git
+
+* Update emacs-nox11-git mk-files such that the PLIST in emacs-git will
+  be reused in the nox11 variant
+
+* Update emacs-git mk-files to reuse a patched modules.mk in pkgsrc
+  main -- a patch for supporting emacs-git and emacs-nox11-git as
+  EMACS_TYPE emacs27 and emacs27nox respectively
+
+* Add a subset of emacs-git options.mk options to a new emacs-nox11-git
+  options.mk, supporting options gnutls and jansson in the nox11 variant
+
+* Add version.mk for emacs-nox11-git, reusing emacs-git version.mk with
+  modification per _EMACS_REQD - assuming an EMACS_TYPE updated per the 
+  patch for pkgsrc main, denoted here
+
+* Reuse the patched modules.mk from pkgsrc main in emacs-git,
+  emacs-nox11-git
+
+* Reuse the patched Makefile.common from pkgsrc main in emacs-git,
+  emacs-nox11-git
+
+* Reuse Makefile.common from emacs-git in emacs-nox11-git
+
+
+# Additional Remarks
+
+Emacs gnutls support would be required for users accessing ELPA package
+repositories via HTTPS.
+
+Cairo UI support is known to be usable in GTK+3 Emacs builds without rsvg
+support i.e without pkgsrc build option svg. However, it may not be
+certain as to whether Cairo UI support may contribute anything,
+functionally -- directly, or via Pango, or otherwise -- to a build
+without the 'svg' pkg option. In the series of local changesets addresed
+with this patch, Cairo UI support had been tentatively added to all
+GTK+3 Emacs builds, locally. That change was reverted before this patch
+was produced.
 
 
 # Changeset Information
@@ -9,9 +54,6 @@ Changeset filter @ pkgsrc-wip: emacs*-git, local authorship
 
 Upstream parent changeset @ pkgsrc-wip:              907db8edb6
 Local parent changeset @ thinkum pkgsrc-wip contrib: d8f44f5f06
-
-Corresponds to a patch on pkgsrc main ports tree:
-
 
 diff --git a/emacs-git/Makefile b/emacs-git/Makefile
 index d1e03c0372..e6150e9fa2 100644

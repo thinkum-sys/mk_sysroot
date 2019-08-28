@@ -1,4 +1,12 @@
+Summary: Add support for EMACS_TYPE emacs27* in pkgsrc main ports tree
 
+Description: This patch adds support for packages depending on pkgsrc-wip
+emacs-git and/or emacs-nox11-git ports - such that would be denoted with
+EMACS_TYPE emacs27 or emacs27nox, respectively, as pursuant of a
+corresponding patch on pkgsrc-wip.
+
+See also: patch_wip-emacs-support.diff which depends on this patch for
+application onto the pkgsrc main ports tree.
 
 # Changeset Information
 
@@ -9,9 +17,6 @@ Changeset filter @ pkgsrc: editors/emacs editors/emacs26, local authorship
 
 Upstream parent changeset @ pkgsrc: f992d09e25d
 Local parent changeset @ thinkum pkgsrc contrib: 8932e6eaf30
-
-Corresponds to a patch on pkgsrc main ports tree:
-patch_wip-emacs-support.diff
 
 
 diff --git a/editors/emacs/modules.mk b/editors/emacs/modules.mk
