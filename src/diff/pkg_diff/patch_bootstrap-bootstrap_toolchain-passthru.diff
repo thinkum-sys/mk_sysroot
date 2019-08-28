@@ -1,3 +1,5 @@
+Title: Toolchain pasthrough for --compiler=clang in TARGET_MKCONF
+
 Summary: When generating TARGET_MKCONF during bootrap, if CC, CXX,
 and/or CPP is bound in the bootstrap shell environment, then use the
 provided value in the generateed TARGET_MKCONF.
@@ -47,6 +49,19 @@ This does not affect the following, during build:
 
 This does not affect CC in TARGET_MKCONF for bootstrap `--compiler=`
 other than clang.
+
+# Changeset Information
+
+Local author: Sean Champ <spchamp@users.noreply.github.com>
+
+Changeset:  ca9bdc1b2e0
+
+Changeset filter @ pkgsrc: bootstrap/bootstrap
+
+Upstream parent changeset @ pkgsrc: f992d09e25d
+Local parent changeset @ thinkum pkgsrc contrib: 459b7dfcb3a
+
+i.e git diff f992d09e25d ca9bdc1b2e0 bootstrap/bootstrap
 
 
 diff --git a/bootstrap/bootstrap b/bootstrap/bootstrap
