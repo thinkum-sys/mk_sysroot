@@ -1,3 +1,54 @@
+Summary: When generating TARGET_MKCONF during bootrap, if CC, CXX,
+and/or CPP is bound in the bootstrap shell environment, then use the
+provided value in the generateed TARGET_MKCONF.
+
+# Description
+
+In effect, this serves to prevent a GCC 3 build during pkgsrc bootstrap,
+on some hosts, such as when using clang as the PKGSRC_COMPILER and CC
+bound to clang with a version suffix, during bootstrap.
+
+When bootstrapping pkgsrc on a Debian 8 installation, using the Debian 8
+distribution of clang from LLVM 4, it may not be sufficient to only
+provide the option `--compiler=clang` to the bootstrap shell script. In
+order for the actual clang compiler to be located, the bootstrap shell
+environment may be configured as follows:
+
+    CC=clang-4.0
+    CXX=clang++-4.0
+    CPP=clang-cpp-4.8
+
+This configuration for CC, on that host, would allow for building the
+"Early Bootstrap" ports, i.e those that do not use the generated
+TARGET_MKCONF. When the "Late Bootstrap" ports are built -- such as for
+bmake and its bootstrap dependencies -- then if the exact values
+provided for CC, CXX, and CPP are not used in the TARGET_MKCONF, the
+build may fail during configure. The configure scripts may then emit
+error messages, indicating as though the compiler was misconfigured or
+not functioning. In actuality, the configure script would not have been
+able to locate a compiler as CC=clang, on that host.
+
+With this simple patch, if any CC, CXX, and/or CPP is provided in the
+bootstrap shell environment, the bootstrap shell script will use that
+value for the respective toolchain component. Otherwise, the script will
+use the original defaults for each of CC, CXX, and CPP when
+bootstrapping with --compiler=clang
+
+# Known Issues
+
+This does not affect the following, during build:
+
+* The binding of LD in the environment, and the availability of an `ld`
+  in the shell PATH during bootstrap
+
+* CFLAGS during bootstrap
+
+* LDFLAGS during bootstrap
+
+This does not affect CC in TARGET_MKCONF for bootstrap `--compiler=`
+other than clang.
+
+
 diff --git a/bootstrap/bootstrap b/bootstrap/bootstrap
 index fc1d77606d0..3631965ce4a 100755
 --- a/bootstrap/bootstrap
