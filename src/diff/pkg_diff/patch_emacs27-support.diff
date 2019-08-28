@@ -1,3 +1,19 @@
+
+
+# Changeset Information
+
+Local author: Sean Champ <spchamp@users.noreply.github.com>
+
+Changeset range: f992d09e25d [upstream] to 11b8df3f6ff [local]
+Changeset filter @ pkgsrc: editors/emacs editors/emacs26, local authorship
+
+Upstream parent changeset @ pkgsrc: f992d09e25d
+Local parent changeset @ thinkum pkgsrc contrib: 8932e6eaf30
+
+Corresponds to a patch on pkgsrc main ports tree:
+patch_wip-emacs-support.diff
+
+
 diff --git a/editors/emacs/modules.mk b/editors/emacs/modules.mk
 index 77faab3..899dcf5 100644
 --- a/editors/emacs/modules.mk

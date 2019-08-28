@@ -1,3 +1,18 @@
+
+
+# Changeset Information
+
+Local author: Sean Champ <spchamp@users.noreply.github.com>
+
+Changeset range: 907db8edb6 [upstream] to a0d7a1631e [local]
+Changeset filter @ pkgsrc-wip: emacs*-git, local authorship
+
+Upstream parent changeset @ pkgsrc-wip:              907db8edb6
+Local parent changeset @ thinkum pkgsrc-wip contrib: d8f44f5f06
+
+Corresponds to a patch on pkgsrc main ports tree:
+
+
 diff --git a/emacs-git/Makefile b/emacs-git/Makefile
 index d1e03c0372..e6150e9fa2 100644
 --- a/emacs-git/Makefile
@@ -123,7 +138,7 @@ index 0000000000..0ac64cd09b
 +.endif
 +
 diff --git a/emacs-git/PLIST b/emacs-git/PLIST
-index 8deeeb06e9..124bc113a0 100644
+index d1021b5af3..124bc113a0 100644
 --- a/emacs-git/PLIST
 +++ b/emacs-git/PLIST
 @@ -6,7 +6,6 @@ bin/emacs-${PKGVERSION}
@@ -134,16 +149,7 @@ index 8deeeb06e9..124bc113a0 100644
  info/auth.info.gz
  info/autotype.info.gz
  info/bovine.info.gz
-@@ -2717,8 +2716,6 @@ share/emacs/${PKGVERSION}/lisp/mpc.el.gz
- share/emacs/${PKGVERSION}/lisp/mpc.elc
- share/emacs/${PKGVERSION}/lisp/msb.el.gz
- share/emacs/${PKGVERSION}/lisp/msb.elc
--share/emacs/${PKGVERSION}/lisp/multifile.elc
--share/emacs/${PKGVERSION}/lisp/multifile.el.gz
- share/emacs/${PKGVERSION}/lisp/mwheel.el.gz
- share/emacs/${PKGVERSION}/lisp/mwheel.elc
- share/emacs/${PKGVERSION}/lisp/net/ange-ftp.el.gz
-@@ -3346,14 +3343,6 @@ share/emacs/${PKGVERSION}/lisp/proced.el.gz
+@@ -3344,14 +3343,6 @@ share/emacs/${PKGVERSION}/lisp/proced.el.gz
  share/emacs/${PKGVERSION}/lisp/proced.elc
  share/emacs/${PKGVERSION}/lisp/profiler.el.gz
  share/emacs/${PKGVERSION}/lisp/profiler.elc
@@ -158,6 +164,11 @@ index 8deeeb06e9..124bc113a0 100644
  share/emacs/${PKGVERSION}/lisp/progmodes/antlr-mode.el.gz
  share/emacs/${PKGVERSION}/lisp/progmodes/antlr-mode.elc
  share/emacs/${PKGVERSION}/lisp/progmodes/asm-mode.el.gz
+@@ -3986,3 +3977,4 @@ share/icons/hicolor/scalable/apps/emacs.svg
+ share/icons/hicolor/scalable/mimetypes/emacs-document.svg
+ share/icons/hicolor/scalable/mimetypes/emacs-document23.svg
+ share/metainfo/emacs.appdata.xml
++include/emacs-module.h
 diff --git a/emacs-git/modules.mk b/emacs-git/modules.mk
 index 2ac1eafb4e..f0abe0a7b4 100644
 --- a/emacs-git/modules.mk
@@ -660,7 +671,7 @@ index fe80e9b761..2093d4b98a 100644
  .include "../../mk/bsd.pkg.mk"
 diff --git a/emacs-nox11-git/options.mk b/emacs-nox11-git/options.mk
 new file mode 100644
-index 0000000000..74a517ef2a
+index 0000000000..c06bf7a537
 --- /dev/null
 +++ b/emacs-nox11-git/options.mk
 @@ -0,0 +1,27 @@
@@ -668,8 +679,8 @@ index 0000000000..74a517ef2a
 +
 +### Set options
 +PKG_OPTIONS_VAR=			PKG_OPTIONS.emacs
-+PKG_SUPPORTED_OPTIONS=			jansson
-+PKG_SUGGESTED_OPTIONS=			jansson
++PKG_SUPPORTED_OPTIONS=			gnutls jansson
++PKG_SUGGESTED_OPTIONS=			gnutls jansson
 +
 +.include "../../mk/bsd.options.mk"
 +
