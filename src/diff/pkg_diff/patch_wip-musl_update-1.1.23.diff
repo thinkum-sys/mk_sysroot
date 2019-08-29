@@ -1,9 +1,6 @@
 Summary: Update wip/musl for 1.1.23
 
-Description:
-
-TBD - cf. musl 1.0.0 Reference Manual, available on the web
-at https://www.musl-libc.org/doc/1.0.0/manual.html 
+Description: Update for musl upstream release 1.1.23
 
 Vulernabilities denoted in CVE-2015-1817, CVE-2016-8859, and
 CVE-2017-15650 have been addressed in this release of musl libc. More
@@ -12,35 +9,60 @@ site, page https://www.musl-libc.org/oldversions.html
 
 # Additional Remarks
 
-TBD: musl dynlib support onto pkg LOCALBASE (CFLAGS, LDFLAGS,
-compile-time linker, runtime linker @ host/sysroot, other)
+The following concerns may be addressed in later changesets
 
-TBD: pkgsrc-wip support for host component dependency per special
-filesystem types -- e.g Linux procfs, Linux devpts, and devfs
-filesystems. (May be addressed via MESSAGE text, though this in itself
-would not provide any systems management support)
+* musl dynlib support onto pkg LOCALBASE 
+    * CFLAGS, LDFLAGS, compile-time linker configuration, and runtime
+      linker configuration for one or both of the host system and a
+      pkg system under a single LOCALBASE - may vary by host system libc
+      implementation
 
-TBD: musl libc test with BSD devfs
+* mk-file support for Common libc features when linking to musl libc e.g
+  for CFLAFGS, LDFLAGS, and dynlib linker support - as might be common
+  to wip musl libc, wip glibc, bionic libc,  uclibc, other libc
+  (Assuming: bionic libc, uclibc available in wip)
 
-TBD: mk-file support for Common libc features e.g for CFLAFGS, LDFLAGS,
-and dynlib linker support - wip musl libc, wip glibc, bionic libc,
-uclibc, other libc (Assuming: bionic libc, uclibc available in wip)
+* support for pkgsrc wip ports requiring special host features, such as
+  one or more of a filesystem type at a specific mount point, e.g Linux
+  procfs, Linux devpts, and devfs filesystems ... under LOCALBASE
+    * To an extent, such requirements may be noted to the pkg user via
+      MESSAGE text
+    * This has been addressed locally with an added MESSAGE file
+      denoting Linux procfs usage in musl libc -- not included in this
+      patch. This local change not address devpts usage, devfs, or
+       other concerns with regards to specific pathnames and their usage
+      in musl libc
+    * TBD: systems management support, assuming the availability of an
+      infrastructure for integration with systems management reflection
+      and maintenance tools for any specific host systems, in pkg mk-files 
 
-TBD: libc and MK_SYSROOT - usage cases, specifications for build
-environment and test environment systems. (See also: LFS)
+* TBD: musl libc test with BSD devfs - usage case, build evironment,
+  test environment, outcomes, and further considerations
+
+* TBD: sysroot - musl libc dynlib support, special host filesystem support
+    * Assuming: A further support for any known toolchain configuration,
+      pursuant towards bytecode isolation under LOCALBASE -- vis a vis
+      `--sysroot` options for LLVM and GCC -- whether under a cross-compile
+      usage case or when compiling for a system with the same MACHINE_ARCH
+      as the host system (in both, same OPSYS). This may be addressed
+      via the mk_sysroot project -- towards a manner of reusable toolchain
+      configuration extending of pkgsrc mk-files, along with
+      descriptions of usage cases, specifications for build environment
+      and test environment systems, etc.
+    * See also: LFS
 
 # Changeset Information
 
 Local author: Sean Champ <spchamp@users.noreply.github.com>
 
-Changeset:  TBD1
+Changeset:  bebe94346f
 
 Changeset filter @ pkgsrc-wip: musl
 
-Upstream parent changeset @ pkgsrc-wip: TBD3
-Local parent changeset @ thinkum pkgsrc-wip contrib: TBD4
+Upstream parent changeset @ pkgsrc-wip: 740eaee0c9
+Local parent changeset @ thinkum pkgsrc-wip contrib: 9528d8eb24
 
-i.e git diff TBD3 TBD1 bootstrap/bootstrap
+i.e git diff 740eaee0c9 bebe94346f musl
 
 
 diff --git a/musl/Makefile b/musl/Makefile
