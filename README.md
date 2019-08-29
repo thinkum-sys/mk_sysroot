@@ -1,30 +1,38 @@
-mk_sysroot
-==========
+mk_sysroot (is not LFS)
+=======================
 
 ## Generalized Goals
 
-* Developing a sysroot -- in a manner semantically similar to LFS --
-  using an LLVM toolchain and pkgsrc ports, with tool support provided
-  as principally independent of the host OS, host compiler toolchain,
-  and hardware profile on the build host [WorkInProgress]
+* Developing a sysroot -- in a manner perhaps semantically similar to
+  LFS, at least insofar as concerning the build sequence, if not
+  alternately similar to a "Micro BSD" system -- using an LLVM toolchain
+  and pkgsrc ports ... with tool support provided as principally
+  independent of the host OS, host compiler toolchain, and hardware
+  profile on the build host. Of course, some build/installation host
+  dependencies may vary. As well as focusing on LLVM as a compiler
+  toolchain, this approach focuses on reusing pkgsrc as a sotware
+  component distribution framework -- as such, may be easier to maintain
+  than an LFS build in itself. [WorkInProgress]
 
 * Prototyping a cross-compile system for one or more build-host
-  sysroot and one or more of an installation host sysroot with pkgsrc,
-  using an LLVM toolchain and -- insofar as may be required for any
-  individual software component builds -- GCC [NeedsWork]
+  sysroot and one or more of a installation host sysroot -- installation
+  host differing to the build host, in hardware and/or OS archietcture --
+  with pkgsrc, using the LLVM toolchain principally. Insofar as may be
+  required for any individual software component builds, GCC might also
+  be used [NeedsWork]
 
-* Prototyping a system for using pkgsrc to install a Linux from
-  Scratch kernel build and BSD-like base system (including a bootloader,
-  e.g Grub or U-Boot, and text editor for console-interactive builds)
-  for new Linux installations (TBD: System HW Profiles, Image Formats
-  and Imaging Methods, and Usage Case/Component Profiles to support)
-  [NeedsWork]
+* Prototyping a system for using pkgsrc to install a Linux userspace
+  BSD-like base system (including a bootloader, e.g Grub or U-Boot,
+  shell, minimum shell utilities, and text editor for console-
+  interactive builds) for new Linux installations (TBD: System
+  HW Profiles, Image Formats  and Imaging Methods, and Usage
+  Case/Component Profiles to support) [NeedsWork]
 
-* Developing a Portable Infrastructure for Component-Oriented QA/Support
-  with pkgsrc and arbitrary upstream source code distributions
-  [WorkInProgress]
+* Developing a Portable Infrastructure for Component-Oriented, Site-
+  Provided QA/Support with pkgsrc and arbitrary upstream source code
+  distributions [WorkInProgress]
 
-## Platforms Tested - sysroot with pkgsrc
+## Platforms Tested - pkgsrc
 
 * Debian 8 (Linux 4.9.0) (amd64)
     * Bootstrap toolchain: LLVM 4 (Debian 8)
@@ -69,7 +77,7 @@ mk_sysroot
 * QA/Support - Tools: Note GNATS send-pr (Email-like/Forms-like UI;
   Database-like infrastructure system)
 
-* QA/Support - Tools: DocBook XML toolchain (LFS book; pkgsrc guide)
+* QA/Support - Tools: DocBook XML toolchain (NB: pkgsrc guide)
 
 * System Profile - Install to **Pre-Container Filesystem**
     * Generalization -> Implementation
@@ -133,6 +141,17 @@ mk_sysroot
     * NB - Limited Support: Ubuntu chroot on Android [Indemnification
       Clause Here]
     * NB - Historic Works: Maemo on Nokia Platforms
+
+* System Profile - Build On Host, Install to Host Root (is not LFS)
+    * bootloader support TBD
+    * boot-time shell support TBD
+        * Topic: Shell over serial line
+        * Topic: Boot shell and user authentication
+    * BSD-like rc vs. systemd; launchd
+    * Installer support TBD
+    * Installer build process TBD
+    * Integration with well-known OEM software distributions TBD - GPU
+      support, etc.
 
 * System Profile - Other: Support TBD
 
