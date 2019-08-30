@@ -23,19 +23,37 @@ LLVM_CCACHE_LINKDIR=${LOCALBASE}/libexec/llvm
 CCACHE_RELPATH="../../ccache"
 LLD_RELPATH="../../lld"
 
+PKG_TGT=${PKG_TGT:-clean build package}
+INSTALL_TGT=${INSTALL_TGT:-install}
+CLEAN_TGT=${CLEAN_TGT:-clean}
+
+
+## Assumption: Site mk.conf provides mk-conf specifications dispatching
+## on HOST_TOOLCHAIN and/or PKGSRC_COMPILER to select an appropiate set
+## of specification for CC, CXX, CPP, LLD
+
+
+clean_after_build() {
+  local PORT=$1; shift
+  if [ "x${CLEAN_TGT}" != "x" ]; then
+     bmake -C ${PKGSRCDIR}/${PORT} ${CLEAN_TGT}
+  fi
+}
 
 build_llvm_1() {
   local PORT=$1; shift
   env CC="${HOST_CC_LLVM}" CXX="${HOST_CXX_LLVM}" CPP="${HOST_CPP_LLVM}" \
     LD="${HOST_LD_LLVM}" bmake -C ${PKGSRCDIR}/${PORT} \
-    	build package install clean USE_CWRAPPERS=no HOST_TOOLCHAIN=clang
+    	${PKG_TGT} ${INSTALL_TGT} USE_CWRAPPERS=no HOST_TOOLCHAIN=clang &&
+    clean_after_build
 }
 
 build_llvm_2() {
   local PORT=$1; shift
   env CC="${HOST_CC_LLVM}" CXX="${HOST_CXX_LLVM}" CPP="${HOST_CPP_LLVM}" \
     LD="${HOST_LD_LLVM}" bmake -C ${PKGSRCDIR}/${PORT} \
-    	build package install clean HOST_TOOLCHAIN=gcc HOST_TOOLCHAIN=clang
+    	${PKG_TGT} ${INSTALL_TGT} HOST_TOOLCHAIN=gcc HOST_TOOLCHAIN=clang &&
+    clean_after_build
 }
 
 
@@ -43,7 +61,8 @@ build_s1() {
   local PORT=$1; shift
   env CC="${HOST_CC_GCC}" CXX="${HOST_CXX_GCC}" CPP="${HOST_CPP_GCC}" \
     LD="${HOST_LD_GCC}" bmake -C ${PKGSRCDIR}/${PORT} \
-    	build package install clean USE_CWRAPPERS=no HOST_TOOLCHAIN=gcc
+    	build package install clean USE_CWRAPPERS=no HOST_TOOLCHAIN=gcc &&
+    clean_after_build
 }
 
 
@@ -52,12 +71,15 @@ build_s2() {
   env PATH="${LLVM_CCACHE_LINKDIR}:${PATH}" \
     CC="clang" CXX="clang++" CPP="clang-cpp" LD="ld.lld" \
     bmake -C ${PKGSRCDIR}/${PORT} \
-    	build package clean USE_CWRAPPERS=no
+    	build package clean USE_CWRAPPERS=no PKGSRC_COMPILER=clang &&
+    clean_after_build
 }
 
 ## ---
 
-## rebootstrap without cwrappers )or locking)
+## Assumption: site mk.conf already updated
+
+## rebootstrap without cwrappers (or locking)
 ##
 ## NB mk.conf configured to prevent locking in these port builds
 ##
@@ -95,6 +117,8 @@ for P in lang/libunwind lang/llvm lang/clang \
    lang/libcxxabi lang/libcxx lang/compiler-rt devel/lld; do
   build_s2 $P || break
 done
+
+## NB: Manually installing rebuilt pkgs built within build_s2
 
 ## -- QA/Remarks
 
