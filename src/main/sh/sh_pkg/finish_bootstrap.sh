@@ -28,7 +28,7 @@ build_llvm_1() {
   local PORT=$1; shift
   env CC="${HOST_CC_LLVM}" CXX="${HOST_CXX_LLVM}" CPP="${HOST_CPP_LLVM}" \
     LD="${HOST_LD_LLVM}" bmake -C ${PKGSRCDIR}/${PORT} \
-    	build package install clean USE_CWRAPPERS=no
+    	build package install clean USE_CWRAPPERS=no HOST_TOOLCHAIN=gcc
 }
 
 build_llvm_2() {
