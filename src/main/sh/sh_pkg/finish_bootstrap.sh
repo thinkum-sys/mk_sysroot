@@ -28,14 +28,14 @@ build_llvm_1() {
   local PORT=$1; shift
   env CC="${HOST_CC_LLVM}" CXX="${HOST_CXX_LLVM}" CPP="${HOST_CPP_LLVM}" \
     LD="${HOST_LD_LLVM}" bmake -C ${PKGSRCDIR}/${PORT} \
-    	build package install clean USE_CWRAPPERS=no HOST_TOOLCHAIN=gcc
+    	build package install clean USE_CWRAPPERS=no HOST_TOOLCHAIN=clang
 }
 
 build_llvm_2() {
   local PORT=$1; shift
   env CC="${HOST_CC_LLVM}" CXX="${HOST_CXX_LLVM}" CPP="${HOST_CPP_LLVM}" \
     LD="${HOST_LD_LLVM}" bmake -C ${PKGSRCDIR}/${PORT} \
-    	build package install clean
+    	build package install clean HOST_TOOLCHAIN=gcc HOST_TOOLCHAIN=clang
 }
 
 
@@ -43,7 +43,7 @@ build_s1() {
   local PORT=$1; shift
   env CC="${HOST_CC_GCC}" CXX="${HOST_CXX_GCC}" CPP="${HOST_CPP_GCC}" \
     LD="${HOST_LD_GCC}" bmake -C ${PKGSRCDIR}/${PORT} \
-    	build package install clean USE_CWRAPPERS=no
+    	build package install clean USE_CWRAPPERS=no HOST_TOOLCHAIN=gcc
 }
 
 
