@@ -52,7 +52,7 @@ build_s2() {
   env PATH="${LLVM_CCACHE_LINKDIR}:${PATH}" \
     CC="clang" CXX="clang++" CPP="clang-cpp" LD="ld.lld" \
     bmake -C ${PKGSRCDIR}/${PORT} \
-    	build package install clean USE_CWRAPPERS=no
+    	build package clean USE_CWRAPPERS=no
 }
 
 ## ---
