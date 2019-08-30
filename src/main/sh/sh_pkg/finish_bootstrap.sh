@@ -2,7 +2,7 @@
 
 ## NB: Host toolchain configuation - LLVM on Debian 8
 
-## NB: Not singularly tested, as ye
+## NB: Not singularly tested, as yet
 
 set -e
 
@@ -106,12 +106,18 @@ done
 ##
 ## ASSUMPTION: Site has installed a ccache configuration as the pathname
 ## ${LOCALBASE}/etc/ccache.conf
+##
+## NB: Assuming it's a new ccache installation, it may not serve to
+## speed up the initial stage-2 build but should serve to speed up any
+## LLVM build subsequent of the stage-2 build.
 build_s1 devel/ccache &&
   mkdir -p "${LLVM_CCACHE_LINKDIR}" &&
   { ln -s ${CCACHE_RELPATH} clang;
     ln -s ${CCACHE_RELPATH} clang++;
     ln -s ${LLD_RELPATH} ld;
   }
+
+
 
 for P in lang/libunwind lang/llvm lang/clang \
    lang/libcxxabi lang/libcxx lang/compiler-rt devel/lld; do
