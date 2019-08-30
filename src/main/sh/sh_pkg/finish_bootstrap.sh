@@ -20,6 +20,8 @@ LOCALBASE="${LOCALBASE:-/usr/pkg}"
 PKGSRCDIR="${PKGSRCDIR:-/usr/pkgsrc}"
 
 LLVM_CCACHE_LINKDIR=${LOCALBASE}/libexec/llvm
+CCACHE_RELPATH="../../ccache"
+LLD_RELPATH="../../lld"
 
 
 build_llvm_1() {
@@ -84,8 +86,10 @@ done
 ## ${LOCALBASE}/etc/ccache.conf
 build_s1 devel/ccache &&
   mkdir -p "${LLVM_CCACHE_LINKDIR}" &&
-  ln -s ../../bin/ccache
-
+  { ln -s ${CCACHE_RELPATH} clang;
+    ln -s ${CCACHE_RELPATH} clang++;
+    ln -s ${LLD_RELPATH} ld;
+  }
 
 for P in lang/libunwind lang/llvm lang/clang \
    lang/libcxxabi lang/libcxx lang/compiler-rt devel/lld; do
