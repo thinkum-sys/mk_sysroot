@@ -37,36 +37,37 @@ mk_sysroot (is not LFS)
 * Debian 8 (Linux 4.9.0) (amd64)
     * Bootstrap toolchain: LLVM 4 (Debian 8)
     * Note: pkgsrc cwrappers disabled during bootstrap, built and
-      enabled post-bootstrap
-    * Note: "Needs QA," primarily due to concerns pursuant of:
-        * (A) updating to newer distsrc for some ports in pkgsrc,
-          pursuant to active support in upstream development projects
-          and site-local integration for built components
+      enabled post-bootstrap (no locking, no cwrappers)
+    * LLVM 4.0 from Debian 8 used for bootstrap; pkgsrc bootstrap script
+      patched to an effect of preventing a GCC 3 build during bootstrap.
+    * GCC 4.9 from Debian 8 used for LLVM stage-1 toolchain build.
+    * "Needs QA," such as due to concerns pursuant of:
+        * (A) updating to newer distsrc for ports in pkgsrc; support for
+          site build maintenance, upstream projects, and site-local
+          development; wip/git ports
         * (B) addressing concerns that may be entailed of a lack of
           bytecode isolation in the initial usage case - in effect,
-          pursuant to numerous link-time build failures
+          pursuant to numerous link-time build failures (various) under
+          certain toolchain configurations
         * (C) addressing any particular characteristics of individual
           source systems -- common concerns, e.g providing a `--tag=cc`
           option for `libtool` in individual builds.
-    * Note: **Toolchain bootstrap** -- with pkgsrc LLVM 8, GCC 8 builds
-      --  configuration and testing for **sysroot bytecode isolation**
-      [FIXME]
-    * Note: Userspace bootstrap for the mk_sysroot project on Linux -
-      primary initial usage case - Components (tmux, BASH, editor, git,
-      ...)
+        * (D) dynlib for sysroot - wip/musl port and other alternatives
+          to GNU libc (bionic, uclibc, other); linker configuration;
+          descriptions of usage cases, build environment, and test
+          environment characteristics
 
 * FreeBSD 11.2 (amd64)
     * Bootstrap toolchain: LLVM 8 (FreeBSD ports)
     * Note: pkgsrc cwrappers disabled during bootstrap and subsequently
-    * Note: "Needs QA" primarily due to link-time errors, `-lgcc`, `-lgcc_s`
-    * Note: GCC 8 and LLVM 8 built post-build -- see previous remarks
-    * Note: QA/Testing for build configuration (mk_sysroot project on
-      FreeBSD - primary initial usage case) (NB: "Control Group"
-      metaphor for site-local QA/support with a site-local pkgsrc
-      build configuration)
+    * Note: "Needs QA" primarily due to link-time errors, `-lgcc`,
+      `-lgcc_s`, toolchain bootstapping and toolchain configuration for
+      local pkg installation
 
 * Ubuntu 16.04 userspace chroot under Android 4 (Linux 3.4.39) (armv7l) [New]
-    * Bootstrap toolchain: TBD (LLVM 6)
+    * Bootstrap toolchain: TBD - LLVM 6 available in chroot.
+    * Tabled, while focusing on pkgsrc on amd64/Debian 8
+    * See also: Termux builds, Debian packaging tools
 
 ## Additional Remarks - Support Profiles
 
@@ -193,6 +194,12 @@ mk_sysroot (is not LFS)
           sysroot runtime; Build-host container runtime; Cross-build and
           install for emulator/mobile runtime
         * Note daemontools supervise(8)
+
+## Technical Documentation - LLVM
+
+* LLVM Multi-Stage Builds
+    * [Advanced Build Configuration](http://llvm.org/docs/AdvancedBuilds.html)
+* Other LLVM documentation; Source code examples
 
 <!--  LocalWords:  mk sysroot LFS LLVM toolchain pkgsrc WorkInProgress
  -->
