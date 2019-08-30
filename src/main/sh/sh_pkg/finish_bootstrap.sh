@@ -26,30 +26,30 @@ LLD_RELPATH="../../lld"
 
 build_llvm_1() {
   local PORT=$1; shift
-  env CC="${HOST_CC_LLVM}" CXX="${HOST_CXX_LLVM}" CPP="${HOST_CPP_LLVM}" LD="${HOST_LD_LLVM}" \
-    bmake -C ${PKGSRCDIR}/${PORT} \
+  env CC="${HOST_CC_LLVM}" CXX="${HOST_CXX_LLVM}" CPP="${HOST_CPP_LLVM}" \
+    LD="${HOST_LD_LLVM}" bmake -C ${PKGSRCDIR}/${PORT} \
     	build package install clean USE_CWRAPPERS=no
 }
 
 build_llvm_2() {
   local PORT=$1; shift
-  env CC="${HOST_CC_LLVM}" CXX="${HOST_CXX_LLVM}" CPP="${HOST_CPP_LLVM}" LD="${HOST_LD_LLVM}" \
-    bmake -C ${PKGSRCDIR}/${PORT} \
+  env CC="${HOST_CC_LLVM}" CXX="${HOST_CXX_LLVM}" CPP="${HOST_CPP_LLVM}" \
+    LD="${HOST_LD_LLVM}" bmake -C ${PKGSRCDIR}/${PORT} \
     	build package install clean
 }
 
 
 build_s1() {
   local PORT=$1; shift
-  env CC="${HOST_CC_GCC}" CXX="${HOST_CXX_GCC}" CPP="${HOST_CPP_GCC}" LD="${HOST_LD_GCC}" \
-    bmake -C ${PKGSRCDIR}/${PORT} \
+  env CC="${HOST_CC_GCC}" CXX="${HOST_CXX_GCC}" CPP="${HOST_CPP_GCC}" \
+    LD="${HOST_LD_GCC}" bmake -C ${PKGSRCDIR}/${PORT} \
     	build package install clean USE_CWRAPPERS=no
 }
 
 
 build_s2() {
   local PORT=$1; shift
-  env PATH=${LLVM_CCACHE_LINKDIR}:${PATH} \
+  env PATH="${LLVM_CCACHE_LINKDIR}:${PATH}" \
     CC="clang" CXX="clang++" CPP="clang-cpp" LD="ld.lld" \
     bmake -C ${PKGSRCDIR}/${PORT} \
     	build package install clean USE_CWRAPPERS=no
