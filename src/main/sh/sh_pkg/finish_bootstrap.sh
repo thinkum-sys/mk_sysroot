@@ -2,8 +2,8 @@
 
 ## NB: Host toolchain configuation - LLVM on Debian 8
 
-## NB: This script rpresents a general procedure,
-##     and has not been singularly tested, as yet
+## NB: This script represents a general procedure,
+##     and has not been singularly tested, in itself
 
 ## NB: This assumes that a bare minimum LOCALBASE is installed --
 ## principally, a bare pkgsrc bootstrap filesystem -- and an appropriate
@@ -36,7 +36,7 @@
 
 set -e
 
-## NB: Thi default host CC configuration is for Debian 8
+## NB: This default host CC configuration is for Debian 8
 
 HOST_CC_LLVM=${HOST_CC_LLVM:-clang-4.0}
 HOST_CXX_LLVM=${HOST_CXX_LLVM:-clang++-4.0}
