@@ -2,24 +2,57 @@
 
 ## NB: Host toolchain configuation - LLVM on Debian 8
 
-## NB: Not singularly tested, as yet
+## NB: This script rpresents a general procedure,
+##     and has not been singularly tested, as yet
+
+## NB: This assumes that a bare minimum LOCALBASE is installed --
+## principally, a bare pkgsrc bootstrap filesystem -- and an appropriate
+## configuraton under the pkg 'etc' dir.
+
+## FIXME: QA needed for stage-2 build failures with stage-1 built w/ GCC
+##
+## - Note that compiler-rt is being built under local config, in
+##   the stage-1 build. Use its rtlib in the stage 2 build? and subsq.
+##
+##   - works OK in local testing - libunwind stage-2 build, at least
+##
+##   - somehow fails in the llvm stage-2 buld
+##     > ld.lld: error: undefined symbol: vtable for __cxxabiv1::__si_class_type_info
+##
+##   - stage-2 build was not successful, even for libunwind, without the
+##     configuration resulting from -DWITH_COMPILER_RT as below
+
+## NB: This script, in iteslf, does not provide support for build-
+##     logging or storage of other site maintenance data -- e.g storing
+##     the CMakeCache.txt for each LLVM component build, for later
+##     review, QA. Insofar as for build logging, there is the BSD script
+##     command and its approximate analogue in GNU tools
+
+## NB: This script does not provide any support for logging or analysis
+##     of build failures, during initial post-bootstrap, stage-1
+##     stage-2, or later "Host" builds.
+##
+## QA methodologies may vary, by site.
 
 set -e
 
-HOST_CC_LLVM='clang-4.0'
-HOST_CXX_LLVM='clang++-4.0'
-HOST_CPP_LLVM='clang-cpp-4.0'
-HOST_LD_LLVM='ld.lld-4.0'
+## NB: Thi default host CC configuration is for Debian 8
 
-HOST_CC_GCC='clang-4.0'
-HOST_CXX_GCC='clang++-4.0'
-HOST_CPP_GCC='clang-cpp-4.0'
-HOST_LD_GCC='ld.lld-4.0'
+HOST_CC_LLVM=${HOST_CC_LLVM:-clang-4.0}
+HOST_CXX_LLVM=${HOST_CXX_LLVM:-clang++-4.0}
+HOST_CPP_LLVM=${HOST_CPP_LLVM:-clang-cpp-4.0}
+HOST_LD_LLVM=${HOST_LD_LLVM:-ld.lld-4.0}
+
+HOST_CC_GCC=${HOST_CC_GCC:-clang-4.0}
+HOST_CXX_GCC=${HOST_CXX_GCC:-clang++-4.0}
+HOST_CPP_GCC=${HOST_CPP_GCC:-clang-cpp-4.0}
+HOST_LD_GCC=${HOST_LD_GCC:-ld.lld-4.0}
 
 LOCALBASE="${LOCALBASE:-/usr/pkg}"
 PKGSRCDIR="${PKGSRCDIR:-/usr/pkgsrc}"
 
 LLVM_CCACHE_LINKDIR=${LOCALBASE}/libexec/llvm
+## NB: Cheap hack - hard-coding the relative path here
 CCACHE_RELPATH="../../ccache"
 LLD_RELPATH="../../lld"
 
@@ -63,6 +96,10 @@ build_s1() {
     LD="${HOST_LD_GCC}" bmake -C ${PKGSRCDIR}/${PORT} \
     	build package install clean USE_CWRAPPERS=no HOST_TOOLCHAIN=gcc &&
     clean_after_build
+  ## NB: This configuration has been tested, though not via this script,
+  ## per se
+
+  ## FIXME: Copy each build/CMakeCache.txt to maint. storage before clean_after_build
 }
 
 
@@ -70,7 +107,7 @@ build_s2() {
   local PORT=$1; shift
   env PATH="${LLVM_CCACHE_LINKDIR}:${PATH}" \
     CC="clang" CXX="clang++" CPP="clang-cpp" LD="ld.lld" \
-    bmake -C ${PKGSRCDIR}/${PORT} \
+    bmake -C ${PKGSRCDIR}/${PORT} -DWITH_COMPILER_RT \
     	build package clean USE_CWRAPPERS=no PKGSRC_COMPILER=clang &&
     clean_after_build
 }
@@ -104,8 +141,8 @@ done
 ## FIXME: Hard-coding the relative path for the symlinks, here
 ## as a matter of simplicity, though it's not portable
 ##
-## ASSUMPTION: Site has installed a ccache configuration as the pathname
-## ${LOCALBASE}/etc/ccache.conf
+## ASSUMPTION: Site has installed a ccache configuration at e.g the
+## pathname ${LOCALBASE}/etc/ccache.conf
 ##
 ## NB: Assuming it's a new ccache installation, it may not serve to
 ## speed up the initial stage-2 build but should serve to speed up any
