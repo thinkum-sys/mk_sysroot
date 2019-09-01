@@ -1,5 +1,16 @@
 #!/bin/sh
 
+## utility script - build LLVM stage-1 and stage-2 from pkgsrc bootstrap
+##
+## FIXME: Perform a full bootstrap, here.
+##        - Utilize a user-provided OBJHOSTNAME together w/ a set of
+##          local bootstrap mk.conf fragments, for purposes of systems
+##          management and automation when producing the initial
+##          bootstrap system and subsequent compiler system with host
+##          compiler and a build profile per OBJHOSTNAME
+##        - Consider extending for producing a cross-compile bootstrap
+##          from stage-0
+
 ## NB: Host toolchain configuation - LLVM on Debian 8
 
 ## NB: This script represents a general procedure,
@@ -19,6 +30,52 @@
 ##   - somehow fails in the llvm stage-2 buld
 ##     > ld.lld: error: undefined symbol: vtable for __cxxabiv1::__si_class_type_info
 ##
+##   - ?? rebuild all reverse dependencies for stage-2 ? (libxml2, python, ...)
+##     (NB: Minimal/No C++ code in those; python used a a tool in the
+##     build; rebuilding those does not fix the build failure)
+##
+##   - ?? symlink  pkg ld.lld to /usr/bin/ld - NB pkgsrc ld wrapper tools
+##     and host LD (??)
+##     ... viz a viz CMAKE_LINKER:FILEPATH=<WRKDIR>/.wrapper/bin/ld in
+##     the builds with pkgsrc
+##
+##     ... NB this requires admin. oprns. on the host, e.g in using the
+##     Debian dpkg-divert and update-alternatives tools for selecting an
+##     appropriate host 'ld' insofar as for the duration of the pkgsrc builds.
+##
+##     ... does not prevent the build failure
+##
+##    - ?? 'bmake clean configue' then patch CMAKE_LINKER:FILEPATH in
+##      port's build/CMakeCache.txt - substitute the path to ld.lld
+##      under LOCALBASE for the path to the pkgsrc ld wrapper
+##
+##      ... does not prevent the build failure
+##
+##    - ??
+##	CMAKE_ARGS	+=-DCMAKE_NM:FILEPATH=${LOCALBASE}/bin/llvm-nm
+##	CMAKE_ARGS	+=-DCMAKE_OBJDUMP:FILEPATH=${LOCALBASE}/bin/llvm-objdump
+##	CMAKE_ARGS	+=-DCMAKE_OBJCOPY:FILEPATH=${LOCALBASE}/bin/llvm-obcopy
+##
+##      ... useful, but does not prevent the build failure.
+##
+##   - ?? build with -DNO_LIBCXX (but compiler-rt)  when building on Debian 8 ??
+##
+##     ... slightly different build failure then
+##
+##     > ld.lld: error: undefined symbol: std::set_new_handler(void (*)())
+##
+##    - ?? build with -DNO_LIBCXX and no compiler-rt/rtlib on that platform ??
+##
+##    ... and once again:
+##
+##    > ld.lld: error: undefined symbol: vtable for __cxxabiv1::__si_class_type_info
+##
+##   !! and maybe dist-upgrade the host, insofar as kernel, GNU libc, ...
+##
+##   - NB: may provide scripting w/ precautions for 'bmake build package &&
+##     pkg_delete -f <PKGNAME> && pkg_add ...' for in-place port upgraade
+##     in stage-2 builds
+##
 ##   - stage-2 build was not successful, even for libunwind, without the
 ##     configuration resulting from -DWITH_COMPILER_RT as below
 
@@ -37,6 +94,9 @@
 set -e
 
 ## NB: This default host CC configuration is for Debian 8
+
+## FIXME - LLVM 7, GCC 8 are both available in Debian 10
+## [needs testing with at least one of those host CC toolchains]
 
 HOST_CC_LLVM=${HOST_CC_LLVM:-clang-4.0}
 HOST_CXX_LLVM=${HOST_CXX_LLVM:-clang++-4.0}
@@ -85,7 +145,7 @@ build_llvm_2() {
   local PORT=$1; shift
   env CC="${HOST_CC_LLVM}" CXX="${HOST_CXX_LLVM}" CPP="${HOST_CPP_LLVM}" \
     LD="${HOST_LD_LLVM}" bmake -C ${PKGSRCDIR}/${PORT} \
-    	${PKG_TGT} ${INSTALL_TGT} HOST_TOOLCHAIN=gcc HOST_TOOLCHAIN=clang &&
+    	${PKG_TGT} ${INSTALL_TGT} HOST_TOOLCHAIN=clang &&
     clean_after_build
 }
 
