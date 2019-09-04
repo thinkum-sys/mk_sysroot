@@ -1,0 +1,9 @@
+#!/bin/sh
+
+_THIS_P=$(readlink -f "$0")
+_HERE=$(dirname "${_THIS_P}")
+_THIS=$(basename "${_THIS_P}")
+
+. "${_HERE}/pkg_shell.sh"
+
+_pdistname "${1:-$PWD}"

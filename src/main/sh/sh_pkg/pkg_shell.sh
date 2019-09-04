@@ -10,12 +10,12 @@ ERR_USAGE=64 ## NB: EX_USAGE in BSD sysexits(3)
 
 ## NB: Seting THIS here may be ineffective if this script is sourced
 
-THIS_P=$(readlink "$0")
-HERE=$(dirname "${THIS_P}")
-THIS=$(basename "${THIS_P}")
+#_THIS_P=${_THIS_P:-$(readlink -f "$0")}
+#_HERE=${_HERE:-$(dirname "${_THIS_P}")}
+#_THIS=${_THIS:-$(basename "${_THIS_P}")}
 
 msg() {
-  echo "#-- ${THIS} : $@"
+  echo "#-- ${_THIS}${_THIS:+ : }$@"
 }
 
 warn() {
