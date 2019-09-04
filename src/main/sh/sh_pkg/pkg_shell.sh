@@ -106,6 +106,14 @@ _ppkgname() {
   _pmk_var "${WHENCE}" PKGNAME || exit ${ERR_USAGE}
 }
 
+_ppkgname_nover() {
+ ## package name with no version suffix
+ local WHENCE="${1}"; shift
+ local PKGFULL=$(_pmk_var "${WHENCE}" PKGNAME || exit ${ERR_USAGE})
+ local PKGVER=$(_pmk_var "${WHENCE}" PKGVERSION || exit ${ERR_USAGE})
+ echo "${PKGFULL%-${PKGVER}}"
+}
+
 _ppkgpath() {
   local WHENCE="${1}"; shift
   _pmk_var "${WHENCE}" PKGPATH || exit ${ERR_USAGE}
