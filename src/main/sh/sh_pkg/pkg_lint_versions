@@ -1,0 +1,81 @@
+#!/bin/sh
+
+## pkg_lint_versions - Operate on the pkg_info(1) database and PKGSRCDIR
+## to determine which installed packages do not match the version
+## available under PKGSRCDIR. Print a minimally verbose message, for
+## each such "Non-Matching" package/port pair.
+##
+## Version: 0.1
+##
+## Usage e.g
+##
+##  pkg_lint_versions.sh 2>&1 | grep '^#-- Mismatch'
+##
+## Usage, with PKGSRCDIR under ${HOME}
+##
+##  env PKGSRCDIR=~/pkgsrc pkg_lint_versions.sh ...
+##
+## Remarks
+##
+## - This simple shell script does not provide any facilities for
+##   pkg configuration management, pkg dependency graphing, or pkg
+##   build+reinstall scripting
+##
+##   - TBD: Concerning PKG_SUPPORTED_OPTIONS for each built port,
+##     add this to BUILD_DEFS or store locally for each built pkg;
+##     Notify systems manager on event of change in the list of
+##     PKG_SUPPORTED_OPTIONS, for each installed pkg under a given
+##     LOCALBASE
+##
+##   - TBD: Provide an option -- for the durationof "Build time" -- to
+##     update build depends/tool depends and optionally, test depends,
+##     for each "Mismatch" to the available pkgsrc version
+##
+##   - TBD: Provide options for filtering on pkgname and/or pkgpath such
+##     as to prevent the upgrade of an installed pkg
+##
+##   - NB: The dependency graph, in effect, begins at the set of known,
+##     manually installed packages -- subsequently, to the set of known
+##     runtime dependencies of those.
+##
+##   - TBD: Linting for REQUIRES in pkgdb +BUILD_INFO without pkg
+##     depdendency denoted in the port mk-file
+##
+##   - TBD: Notification for each pkg providing a REQUIRES
+##     specification in pkgdb +BUILD_INFO, such that A) The REQUIRES
+##     specification denotes a pathname outside of the configured
+##     LOCALBASE and B) The REQUIRES specification denotes a pathname
+##     that no longer identifies an existing file
+##
+## Known Issues
+##
+## - Does not allow the caller to specify LOCALBASE directly - this may
+##   be set indirectly via PKG_INFO, for the duration of this shell script
+##
+## - Does not fail gracefully if an installed pkg is not available under
+##   PKGSRCDIR
+##
+## - Like other sh_pkg shell scripts in this repository, uses a
+##   hard-coded path to pkg_shell.sh
+##
+## - FIXME: Needs a portable install script
+##
+
+_THIS_P=$(readlink -f "$0")
+_HERE=$(dirname "${_THIS_P}")
+_THIS=$(basename "${_THIS_P}")
+
+. "${_HERE}/pkg_shell.sh"
+
+
+PKG_INFO=${PKG_INFO:-pkg_info}
+AWK=${AWK:-awk}
+
+for PKGNAME in $(${PKG_INFO} -a | ${AWK} '{print $1}'); do
+
+  V_INSTALLED=$(_pkg_pkgver_i ${PKGNAME})
+  V_PKGSRC=$(_pkg_pkgver_p ${PKGNAME})
+  if [ "${V_INSTALLED}" !=  "${V_PKGSRC}" ]; then
+    echo "#-- Mismatch @ ${PKGNAME} - installed: ${V_INSTALLED} / pkgsrc: ${V_PKGSRC}" 1>&2
+  fi
+done
