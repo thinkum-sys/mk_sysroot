@@ -6,4 +6,4 @@ _THIS=$(basename "${_THIS_P}")
 
 . "${_HERE}/pkg_shell.sh"
 
-_ppkgname_nover "${1:-$PWD}"
+_pkg_name_nover_p "${1:-$PWD}"

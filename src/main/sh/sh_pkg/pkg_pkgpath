@@ -6,4 +6,4 @@ _THIS=$(basename "${_THIS_P}")
 
 . "${_HERE}/pkg_shell.sh"
 
-_ppkgpath "${1:-$PWD}"
+_pkg_path_p "${1:-$PWD}"

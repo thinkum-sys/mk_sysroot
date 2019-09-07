@@ -1,51 +1,20 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 ## pkg_lint_versions - Operate on the pkg_info(1) database and PKGSRCDIR
 ## to determine which installed packages do not match the version
-## available under PKGSRCDIR. Print a minimally verbose message, for
+## available under PKGSRCDIR. Print a minimally verbose message onto
+## STDERR and the installed package <x>-<version> pair onto STDOUT, for
 ## each such "Non-Matching" package/port pair.
 ##
-## Version: 0.1
+## Version: 0.2
 ##
-## Usage e.g
+## Usage, filtering other output for local "Mismatch" messages
 ##
 ##  pkg_lint_versions.sh 2>&1 | grep '^#-- Mismatch'
 ##
-## Usage, with PKGSRCDIR under ${HOME}
+## Usage, with a pksgsrc system under ${HOME}
 ##
-##  env PKGSRCDIR=~/pkgsrc pkg_lint_versions.sh ...
-##
-## Remarks
-##
-## - This simple shell script does not provide any facilities for
-##   pkg configuration management, pkg dependency graphing, or pkg
-##   build+reinstall scripting
-##
-##   - TBD: Concerning PKG_SUPPORTED_OPTIONS for each built port,
-##     add this to BUILD_DEFS or store locally for each built pkg;
-##     Notify systems manager on event of change in the list of
-##     PKG_SUPPORTED_OPTIONS, for each installed pkg under a given
-##     LOCALBASE
-##
-##   - TBD: Provide an option -- for the durationof "Build time" -- to
-##     update build depends/tool depends and optionally, test depends,
-##     for each "Mismatch" to the available pkgsrc version
-##
-##   - TBD: Provide options for filtering on pkgname and/or pkgpath such
-##     as to prevent the upgrade of an installed pkg
-##
-##   - NB: The dependency graph, in effect, begins at the set of known,
-##     manually installed packages -- subsequently, to the set of known
-##     runtime dependencies of those.
-##
-##   - TBD: Linting for REQUIRES in pkgdb +BUILD_INFO without pkg
-##     depdendency denoted in the port mk-file
-##
-##   - TBD: Notification for each pkg providing a REQUIRES
-##     specification in pkgdb +BUILD_INFO, such that A) The REQUIRES
-##     specification denotes a pathname outside of the configured
-##     LOCALBASE and B) The REQUIRES specification denotes a pathname
-##     that no longer identifies an existing file
+##  env PKGSRCDIR=~/pkgsrc LOCALBASE=~/pkg pkg_lint_versions.sh ...
 ##
 ## Known Issues
 ##
@@ -60,22 +29,85 @@
 ##
 ## - FIXME: Needs a portable install script
 ##
+## Additional Remarks
+##
+## - Not to be confused with pkglint
+##
+## - This simple shell script does not provide any facilities for
+##   pkg configuration management, pkg dependency graphing, or pkg
+##   build+reinstall scripting
+##
+##   - NB: for packages named such as py27-setuptools-<VERSION>
+##     a notion of "Package variant" may be introduced. This would at
+##     least be a concern for Python packages, and may be concern for
+##     other (PERL??). Of course, some builds may require a specific
+##     version other than that preferred in the local pkgsrc
+##     installation
+##
+##   - TBD: Concerning PKG_SUPPORTED_OPTIONS for each built port,
+##     add the value to BUILD_DEFS or store locally for each built pkg;
+##     Notify systems manager on event of change in the list of
+##     PKG_SUPPORTED_OPTIONS, for each installed pkg under a given
+##     LOCALBASE
+##
+##   - TBD: Provide an option -- for the duration of "Build time" -- to
+##     update build depends/tool depends and optionally, test depends,
+##     for each "Mismatch" to the available pkgsrc version
+##
+##   - TBD: Provide options for filtering on pkgname and/or pkgpath such
+##     as to prevent the upgrade of an installed pkg
+##
+##   - NB: The dependency graph, in effect, begins at the set of known,
+##     manually installed packages -- subsequently, to the set of known
+##     runtime dependencies of those.
+##
+##   - TBD: Linting for REQUIRES paths in pkgdb +BUILD_INFO absent of
+##     a pkg depdendency denoted in the port mk-file - would require a
+##     separate graph of all files provided by each pkg. TBD: Additional
+##     linting for host package/pkgsrc alternatives.
+##
+##   - TBD: Notification for each pkg providing a REQUIRES
+##     specification in pkgdb +BUILD_INFO, such that A) The REQUIRES
+##     specification denotes a pathname outside of the configured
+##     LOCALBASE and B) The REQUIRES specification denotes a pathname
+##     that no longer identifies an existing file
+##
+##   - TBD - Alternate scripting langauges (??)
+##
+##     - 'Struct' types and sh i/o in GNU guile (??)
+##
 
 _THIS_P=$(readlink -f "$0")
 _HERE=$(dirname "${_THIS_P}")
 _THIS=$(basename "${_THIS_P}")
 
+_MISMATCH="0"
+
+_PMISMATCH=""
+
+# NB: AWK, PKG_INFO - set via pkg_shell.sh
+
 . "${_HERE}/pkg_shell.sh"
 
+${PKG_INFO} -a | ${AWK} '{print $1}' | {
 
-PKG_INFO=${PKG_INFO:-pkg_info}
-AWK=${AWK:-awk}
-
-for PKGNAME in $(${PKG_INFO} -a | ${AWK} '{print $1}'); do
-
+while read PKGNAME; do
   V_INSTALLED=$(_pkg_pkgver_i ${PKGNAME})
   V_PKGSRC=$(_pkg_pkgver_p ${PKGNAME})
   if [ "${V_INSTALLED}" !=  "${V_PKGSRC}" ]; then
-    echo "#-- Mismatch @ ${PKGNAME} - installed: ${V_INSTALLED} / pkgsrc: ${V_PKGSRC}" 1>&2
+
+    ## TBD: Use getopt & make this mismatch message (stderr) optional
+    echo "#-- Mismatch $((_MISMATCH++)) \
+@ $(_pkg_path_p ${PKGNAME}):$(_pkg_name_nover_p ${PKGNAME}) \
+- installed: ${V_INSTALLED} / pkgsrc: ${V_PKGSRC}" 1>&2
+
+    echo ${PKGNAME} # ${V_INSTALLED}
   fi
 done
+
+}
+
+if [ "${_MISMATCH}" -gt "0" ]; then
+  echo "#-- ${_MISMATCH} total non-matching"
+  exit 1
+fi
