@@ -21,6 +21,10 @@
 ##   if the calling SH routine is using a supported syntax.
 ##
 ## - Didactic source style (??)
+##
+## - Error messages may not be perfectly informative
+
+set -e
 
 MAKE=${MAKE:-bmake}
 
@@ -68,11 +72,14 @@ _err() {
 ## --
 
 _qstr() {
-## NB: requires a BASH built-in printf extension
+  ## Output the set of arguments as a shell-quoted string
+  ##
+  ## NB: requires a BASH built-in printf extension
   printf "%q" "$@"
 }
 
 _mk_var() {
+  ## Output an expanded mk-file variable for a given port location
   local WHENCE="${1}"; shift
   local NAME="${1}"; shift
   local MULTI_VARS="$@"
@@ -82,6 +89,7 @@ _mk_var() {
 
 
 _emk_var() {
+  ## call _mk_var with a constraint of "Non-Empty Result Required"
   local WHENCE="${1}"; shift
   local NAME="${1}"; shift
   local MULTI_VARS="$@"
@@ -93,19 +101,52 @@ _emk_var() {
   fi
 }
 
+
+_pkg_path_p() {
+  # output PKGPATH for an available port
+  local WHENCE="${1}"; shift
+  local MULTI_VARS="$@"
+  _pmk_var "${WHENCE}" PKGPATH ${MULTI_VARS} || _uerr
+}
+
+
 _pkg_path_i() {
-## compute PKGPATH for an installed pkg - does not call ${MAKE)
+  ## output PKGPATH for an installed pkg
+  ##
+  ## does not call ${MAKE}
+  ##
+  ## NAME must denote a versioned or unversioned package name, for an
+  ## installed package
   local NAME="${1}"; shift
   local OUT=$(${PKG_INFO} -Q PKGPATH "${NAME}")
   if [ "x${OUT}" = "x" ]; then
-    _uerr "Unable to compute PKGPATH for \"${NAME}\""
+    _uerr "Unable to compute PKGPATH for pkg \"${NAME}\""
+  else
+    echo "${OUT}"
+  fi
+}
+
+
+_pkg_multi_p() {
+  ## output MULTI variables for an avaialble port
+  local WHENCE="${1}"; shift
+  local MK_OPTS="$@"
+  local PPATH=$(_pkg_path_p "${WHENCE}")
+  local OUT=$(_pmk_var "${PPATH}" MULTI ${MK_OPTS})
+  if [ "x${OUT}" = "x" ]; then
+    _uerr "Unable to compute MULTI parameters for port \"${WHENCE}\""
   else
     echo "${OUT}"
   fi
 }
 
 _pkg_multi_i() {
-## compute MUTI variables for an installed pkg - does not call ${MAKE)
+  ## output all MULTI variables for an installed pkg
+  ##
+  ## does not call ${MAKE}
+  ##
+  ## NAME must denote a versioned or unversioned package name, for an
+  ## installed package
   local NAME="${1}"; shift
   local OUT=$(${PKG_INFO} -Q MULTI "${NAME}")
   if [ "x${OUT}" = "x" ]; then
@@ -118,36 +159,92 @@ _pkg_multi_i() {
 
 
 _pmk_var(){
-  local NAME="${1}"; shift
+  ## Output the expanded value of a mk-file varaible for an available port
+  ##
+  ## Syntax
+  ## - WHENCE: Denotes a pathname, PKGPATH, or versioned or unversioned
+  ##   package name.
+  ## - VAR: Denotes the name of the mk-file variable to be output.
+  ## - MULTI_VARS: Variables for mk, such that may be provided by the
+  ##   calling function. These parameters should use a syntax such as
+  ##   output by the shell command
+  ##     pkg_info -Q MULTI <pkgname>
+  ##   or similarly:
+  ##     bmake -C <portdir> -D.MAKE.EXPAND_VARIABLES -V MULTI
+  ##   These MULTI parameters may affect selection of variables for
+  ##   ports with variants, such as the python ports.
+  ##
+  ## Environment
+  ## - ${MAKE}
+  ## - ${PKG_INFO}
+  ##
+  ## Exceptional Situations
+  ## - Should fail with ERR_USAGE if provided with a WHENCE for which no
+  ##   port system location can be determined
+  ##
+  ## Know Issues
+  ## - If a relative pathname having only one "/" is provided as WHENCE,
+  ##   that value of WHENCE may be misconstrued as a PKGPATH not a
+  ##   pathanme. It may be recommended that any pathname that may be
+  ##   provided to this function would be expanded such as with
+  ##   `readlink -f` before being provided as the WHENCE parameter to
+  ##   this function.
+  ##
+  ## - This function, when provided with the name of an installed
+  ##   package, will automatically use the set of MULTI variables
+  ##   provided for that package when it was built. It will not check
+  ##   any provided MULTI_VARS for duplication in the package MULTI
+  ##   variables. The behaviors of this function are unspecified. for
+  ##   any event of being provided with any MULTI_VARS duplicating any
+  ##   of the MULTI variables defined in the installed package.
+  ##
+  ## - If provided with a package name as WHENCE, for any package
+  ##   that is not installed under the ${LOCALBASE} principally as being
+  ##   accesseed by ${PKG_INFO}, this function will be unable to compute
+  ##   a port location for that package name. This may be addressed with
+  ##   another programming system and any manner of a mklib and database
+  ##   API under that programming system - pursuant of developing a
+  ##   logical database schema, pkgsrc port traversal methodology, and
+  ##   port configuration management methodology within the same.
+  ##
+  ## - When provided with a package name as WHENCE, this function will
+  ##   not access any build information for that package other than the
+  ##   MULTI variables defined when that package was built. In effect,
+  ##   this function uses a package name in WHENCE only as a symbolic
+  ##   port system pathname locator.
+  ##
+  ## - Does not serve to provide information about package archive
+  ##   files, directly
+  ##
+  local WHENCE="${1}"; shift
   local VAR="${1}"; shift
   local MULTI_VARS="$@" ## NB: Avoid nested quoting, if this is used
 
-  if [ "${NAME#*/*/}" != "${NAME}" ]; then
-  ## Assumption: NAME denotes a pathname
-    _emk_var "${NAME}" "${VAR}" ${MULTI_VARS} || _uerr
-  elif [ "${NAME#*/*}" != "${NAME}" ]; then
-  ## Assumption: NAME denotes a PKGPATH
+  if [ "${WHENCE#*/*/}" != "${WHENCE}" ]; then
+  ## Assumption: WHENCE denotes a pathname
+    _emk_var "${WHENCE}" "${VAR}" ${MULTI_VARS} || _uerr
+  elif [ "${WHENCE#*/*}" != "${WHENCE}" ]; then
+  ## Assumption: WHENCE denotes a PKGPATH
   ## NB: This does not trim any trailing "/" from any provided PKGPATH
-   _emk_var "${PKGSRCDIR}/${NAME}" "${VAR}" ${MULTI_VARS} || _uerr
+   _emk_var "${PKGSRCDIR}/${WHENCE}" "${VAR}" ${MULTI_VARS} || _uerr
   else
-  ## Assumption: NAME denotes a PKGNAME
+  ## Assumption: WHENCE denotes an installed package
   ##
-  ## Compute a PKGPATH given a PKGNAME for an installed pkg + MULTI info
+  ## Output the expanded value of the variable VAR for the active port
+  ## system configuration, given a WHENCE denoting an installed pkg --
+  ## furthermore, using the MULTI info defined in that installed pkg
   ##
   ## NB: This appends any provided MULTI_VARS with no check for any
   ## duplicate/conflicting MULTI variable names. "Caller beware"
   ##
-    local PKGPATH=$(_pkg_path_i "${NAME}" ${MULTI_VARS})
+    local PKGPATH=$(_pkg_path_i "${WHENCE}" ${MULTI_VARS})
     if [ "x${PKGPATH}" = "x" ]; then
-       ## Assumption: NAME *does not* denote an installed pkg
+       ## Assumption: WHENCE *does not* denote an installed pkg
       _uerr
     else
-      MULTI_VARS="$(_pkg_multi_i "${NAME}") ${MULTI_VARS}"
+      MULTI_VARS="$(_pkg_multi_i "${WHENCE}") ${MULTI_VARS}"
       _emk_var "${PKGSRCDIR}/${PKGPATH}" "${VAR}" ${MULTI_VARS}
     fi
-  ## TBD: Compute a PKGPATH given a PKGNAME for an uninstalled pkg
-  ## FIXME TEST -
-  ## bash -c 'source ./pkg_shell.sh && _pmk_var py27-setuptools PKGNAME' &
   fi
 }
 
@@ -163,13 +260,14 @@ _pdistname() {
 #_pdistname /usr/pkgsrc/devel/bmake
 
 _pkg_name_p() {
+  ## versioned package name for an available port
   local WHENCE="${1}"; shift
   local MULTI_VARS="$@"
   _pmk_var "${WHENCE}" PKGNAME ${MULTI_VARS} || _uerr
 }
 
 _pkg_name_nover_p() {
- ## package name for an available port, with no version suffix
+ ## package name (no version suffix) for an available port
  local WHENCE="${1}"; shift
  local MULTI_VARS="$@"
  local PKGFULL=$(_pkg_name_p "${WHENCE}" ${MULTI_VARS} || _uerr)
@@ -178,32 +276,38 @@ _pkg_name_nover_p() {
 }
 
 _pkg_name_nover_i() {
- ## package name for an installed package, with no version suffix
+ ## package name (no version suffix) for an installed package
+ ##
+ ## will call ${MAKE}
+ ##
+ ## Assumption: For any installed package denoted in WHENCE, MULTI
+ ## variables will be handled automatically, specifically in _pmk_var
+ ##
  local WHENCE="${1}"; shift
  local MULTI_VARS="$@"
  local PKGVER=$(_pmk_var "${WHENCE}" PKGVERSION ${MULTI_VARS} || _uerr)
  echo "${WHENCE%-${PKGVER}}"
 }
 
-
-_pkg_path_p() {
-## FIXME - needs test for installed pkg
-  local WHENCE="${1}"; shift
-  local MULTI_VARS="$@"
-  _pmk_var "${WHENCE}" PKGPATH ${MULTI_VARS} || _uerr
-}
-
 _pkg_pkgver_p() {
- ## package version as under PKGSRCDIR
+ ## package version (no package name) for an available port
  local WHENCE="${1}"; shift
  local MULTI_VARS="$@"
  _pmk_var "${WHENCE}" PKGVERSION ${MULTI_VARS} || _uerr
 }
 
 _pkg_pkgver_i() {
- ## package version as installed (if installed) (calls bmake initially)
+ ## package version (no package name) for an installed pkg
  ##
- ## NB - see remarks in _pkg_name_nover_i() ##
+ ## the WHENCE parameter must denote an installed pkg, in this function
+ ##
+ ## will call ${MAKE} in all situations, to determine the unversioned
+ ## name of the available port corresponding to the installed package
+ ## name denoted in WHENCE
+ ##
+ ## Assumption: For any installed package denoted in WHENCE, MULTI
+ ## variables will be handled automatically, specifically in _pmk_var
+ ##
  local WHENCE="${1}"; shift
  local MULTI_VARS="$@"
  local PKGNAME=$(_pkg_name_nover_p "${WHENCE}" ${MULTI_VARS})
