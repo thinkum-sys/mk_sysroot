@@ -144,8 +144,7 @@
 
   <section>
     <title>
-      Specifying <varname>CGLAGS</varname> for individual
-      <glossterm>pkg</glossterm> builds
+      Specifying &var.cflags; for individual <glossterm>pkg</glossterm> builds
     </title>
 
     <formalpara>
@@ -159,6 +158,18 @@
       </para>
     </formalpara>
 
+
+    <para>
+      Opinions may vary, as to the most effectual set of
+      &var.cflags; to use when building for any single
+      <productname>Android</productname> environment. The system
+      described, here, is developed in using &pkgsrc; within a
+      <glossterm>chroot environment</glossterm> on an
+      <productname>Android</productname> system. As such, the set of
+      &var.cflags; may be specified individually for each single
+      software <glossterm>package</glossterm> build, using a simple
+      <glossterm>mk-file</glossterm> syntax in &pkgsrc;
+    </para>
 
     <example>
       <title
