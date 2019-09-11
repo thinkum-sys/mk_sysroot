@@ -1,0 +1,231 @@
+<?xml version="1.0"?>
+<!-- DocBook 5.1 - OASIS schema publication, Nov. 2016 -->
+<!-- http://docs.oasis-open.org/docbook/docbook/v5.1/docbook-v5.1.html -->
+<!-- Locally: RELAX NG compact notation + schematron -->
+<!DOCTYPE article [
+<!-- internal DTD -->
+
+<!-- Typographic Entities -->
+
+<!ENTITY nd '&#x2013;'> <!-- ndash -->
+
+<!-- Gener'l Entity Names -->
+
+<!-- * pksrc port system -->
+<!ENTITY pkgsrc
+	'<productname>pkgsrc</productname>'
+>
+
+<!-- mk-file Entity Names -->
+
+<!ENTITY var.cflags
+	'<varname>CFLAGS</varname>'
+>
+
+<!-- Toolchain Names -->
+
+<!ENTITY tc.llvm
+	'<productname>LLVM</productname>'
+>
+
+<!ENTITY tc.gcc
+	'<productname>GCC</productname>'
+>
+
+<!ENTITY cmd.clang
+	'<productname>clang</productname>'
+>
+
+<!ENTITY cmd.gcc
+	'<productname>gcc</productname>'
+>
+
+
+<!ENTITY cmd.gxx
+	'<productname>g++</productname>'
+>
+
+<!-- pkg/port Names -->
+
+<!ENTITY pkg.libffi
+	'<systemitem class="other" otherclass="PKGPATH"
+	>devel/libffi</systemitem>'
+>
+
+<!ENTITY pkg.openssl
+	'<systemitem class="other" otherclass="PKGPATH"
+        >security/openssl</systemitem>'
+>
+
+<!ENTITY pkg.db6
+	'<systemitem class="other" otherclass="PKGPATH"
+	>databases/db6</systemitem>'
+>
+
+
+]>
+<article
+    xmlns="http://docbook.org/ns/docbook"
+    xmlns:xi="http://www.w3.org/2001/XInclude">
+
+  <info>
+    <title>Q/A Notes &nd; &pkgsrc; on Linux ARM, Android chroot</title>
+    <author>
+      <personname>Sean Champ</personname>
+      <email>spchamp@users.noreply.github.com</email>
+    </author>
+    <revhistory>
+      <revision>
+        <date>10 Sep 2019</date>
+        <revremark>
+          Initial Draft - Towards addressing build failures
+          with &tc.llvm; and &tc.gcc;, on the affected host platform
+        </revremark>
+      </revision>
+    </revhistory>
+  </info>
+
+  <section>
+    <title>
+      Selecting a Toolchain
+    </title>
+
+    <para>
+      The &pkgsrc; installation, as described in this document, is
+      developed within a <glossterm>chroot environment</glossterm> on an
+      <productname>Android</productname>
+      <productnumber>4</productnumber> tablet computer, one of a
+      <productname>Samsung Galaxy</productname> brand. A distribution of
+      <productname>Ubuntu</productname> <productnumber>16.04
+      LTS</productnumber> (<productname>Ubuntu</productname>
+      <productname>xenial</productname>) is installed within that
+      <glossterm>chroot</glossterm> environment.
+    </para>
+
+    <para>
+      The <glossterm>machine</glossterm> itself is using a
+      <productnumber>Linux</productnumber> kernel version
+      <productnumber>3.4.39</productnumber>, <symbol>armv7l</symbol>
+      <glossterm>machine architecture</glossterm>,
+      <orgname>Samsung</orgname> <acronym>OEM</acronym>
+      <glossterm>distribution</glossterm>
+      <footnote>
+        <para>TBD: Kernel headers, for this build</para>
+      </footnote>. The <glossterm>operating
+      system</glossterm> available within the <glossterm>chroot
+      environment</glossterm>, as such, provides distributions of
+      &tc.llvm; and &tc.gcc; under some specific, versioned
+      <glossterm>builds</glossterm>.
+    </para>
+
+    <para>
+      &tc.llvm; release <productnumber>6</productnumber> is the
+      newest &tc.llvm; available, in that <glossterm>operating
+      system</glossterm> distribution. The &tc.gcc;
+      <glossterm>toolchain</glossterm> is also
+      available, at &cmd.gcc; version <productnumber>6</productnumber>
+      and &cmd.gxx; version <productnumber>5</productnumber>.
+    </para>
+
+    <para>
+      &tc.llvm; <productname>libc++</productname> is available, in the
+      <glossterm>host toolchain</glossterm> system, for &tc.llvm; release
+      <productnumber>3.7</productnumber>. This has not been used, in the
+      following. <footnote>
+      <para>
+        Ed. Note: Perhaps that &tc.llvm; distribution should be
+        used, at least for building an initial &tc.llvm; compiler of some
+        newer version.
+      </para>
+    </footnote>
+    </para>
+
+  </section>
+
+  <section>
+    <title>
+      Specifying <varname>CGLAGS</varname> for individual
+      <glossterm>pkg</glossterm> builds
+    </title>
+
+    <formalpara>
+      <title>Affected <varname>PKGPATH</varname></title>
+      <para>
+        <simplelist>
+          <member>&pkg.libffi;</member>
+          <member>&pkg.db6;</member>
+          <member>TBD &pkg.openssl;</member>
+        </simplelist>
+      </para>
+    </formalpara>
+
+
+    <example>
+      <title
+          >Build Failure &nd; &pkg.libffi; with host &tc.llvm; &nd; Output
+      </title>
+<programlisting><![CDATA[]]></programlisting>
+    </example>
+
+
+
+    <example>
+      <title
+          >Build Failures &nd; &pkg.db6;
+      </title>
+
+      <para>
+        &var.cflags; included:
+        <code>-march=armv7-a -mfpu=neon -Wl,--fix-cortex-a8</code>
+      </para>
+
+      <para>
+        Remarks: This set of &var.cflags; was sufficient for building
+        &pkg.libffi;
+      </para>
+
+      <para>
+        Toolchain: Host &tc.gcc;
+        (&cmd.gcc; <productnumber>6</productnumber> /
+        &cmd.gxx; <productnumber>5</productnumber> )
+      </para>
+
+      <para>Output from <command>bmake</command> (<code>bmake build</code>)</para>
+
+      <programlisting><![CDATA[libtool: compile:  gcc-6 -c -I. -I../src -I/usr/include -D_GNU_SOURCE -D_REENTRANT -O2 -march=armv7-a -mfpu=neon -Wl,--fix-cortex-a8 -D_FORTIFY_SOURCE=2 -I/usr/include ../src/mutex/mut_tas.c  -fPIC -DPIC -o .libs/mut_tas.o
+--- db185.lo ---
+libtool: compile:  gcc-6 -c -I. -I../src -I/usr/include -D_GNU_SOURCE
+-D_REENTRANT -O2 -march=armv7-a -mfpu=neon -Wl,--fix-cortex-a8 -D_FORTIFY_SOURCE=2 -I/usr/include ../lang/db185/db185.c -o db185.o >/dev/null 2>&1
+--- mut_tas.lo ---
+/tmp/cc8cQ30F.s: Assembler messages:
+/tmp/cc8cQ30F.s:164: Error: thumb conditional instruction should be in IT block -- `strexne r3,r8,[r4]'
+/tmp/cc8cQ30F.s:463: Error: thumb conditional instruction should be in IT block -- `strexne r3,r10,[r4]'
+*** [mut_tas.lo] Error code 1
+
+bmake: stopped in /usr/pkgsrc/databases/db6/work.sycamore.sycamore/db-6.2.23/build_unix
+1 error]]></programlisting>
+
+      <para>
+        With host &tc.llvm; (&cmd.clang;
+        <productnumber>6</productnumber>) the build fails, but over a missing
+        <filename>iostream.h</filename>
+      </para>
+
+<programlisting><![CDATA[--- zerofill.lo ---
+libtool: compile:  clang-6.0 -c -I. -I../src -I/usr/include -D_GNU_SOURCE -D_REENTRANT -O2 -march=armv7-a -mfpu=neon -Wl,--fix-cortex-a8 -I/usr/include ../src/common/zerofill.c -o zerofill.o >/dev/null 2>&1
+--- cxx_channel.lo ---
+In file included from ../lang/cxx/cxx_channel.cpp:13:
+./db_cxx.h:59:10: fatal error: 'iostream.h' file not found
+#include <iostream.h>
+         ^~~~~~~~~~~~
+1 error generated.
+*** [cxx_channel.lo] Error code 1
+
+bmake: stopped in /usr/pkgsrc/databases/db6/work.sycamore.sycamore/db-6.2.23/build_unix
+1 error]]></programlisting>
+
+    </example>
+
+  </section>
+
+</article>
