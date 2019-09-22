@@ -104,7 +104,9 @@ export PATH MANPATH INFOPATH PKG_CONFIG_LIBDIR  # MAKESYSPATH
 ##     such that can be modified in the build eviroment
 ##     to add any arbitray libexec/<NAME> symlinks dir @ host
 ##     during the build
+##
+## NB: ccache may 'mkdir -p' ${CCACHE_DIR} when does not exist
 CCACHE_MAXSIZE=4G
-CCACHE_DIR=/usr/pkg/var/tmp/ccache
+CCACHE_DIR=${PKGSRC_PREFIX}/var/tmp/ccache
 
 export CCACHE_MAXSIZE CCACHE_DIR # CCACHE_PATH
