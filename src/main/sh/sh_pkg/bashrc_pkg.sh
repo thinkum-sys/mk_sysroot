@@ -108,7 +108,9 @@ export PATH MANPATH INFOPATH PKG_CONFIG_LIBDIR  # MAKESYSPATH
 CCACHE_MAXSIZE=4G
 CCACHE_DIR=$(readlink -f "${PKGSRC_PREFIX}/var/tmp/ccache")
 
-[ -d "${CCACHE_DIR}" ] ||
-  echo "## -- warning: CCACHE_DIR does not exist: ${PKGSRC_PREFIX}/var/tmp/ccache" 1>&2
+[ -d "${CCACHE_DIR}" ] || {
+  echo -n "## -- warning: CCACHE_DIR is not a directory: " 1>&2
+  echo "${PKGSRC_PREFIX}/var/tmp/ccache" 1>&2
+}
 
 export CCACHE_MAXSIZE CCACHE_DIR # CCACHE_PATH
