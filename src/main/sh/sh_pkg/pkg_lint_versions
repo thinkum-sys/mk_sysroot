@@ -10,13 +10,17 @@
 ##
 ## Usage, filtering other output for local "Mismatch" messages
 ##
-##  pkg_lint_versions.sh 2>&1 | grep '^#-- Mismatch'
+##  pkg_lint_versions 2>&1 | grep '^#-- Mismatch'
 ##
 ## Usage, with a pksgsrc system under ${HOME}
 ##
 ##  env PKGSRCDIR=~/pkgsrc LOCALBASE=~/pkg pkg_lint_versions.sh ...
 ##
 ## Known Issues
+##
+## - Calls bmake "Newly" for every single installed pkg. In effect, it
+##   is a "Slow Script," even for a moderately small local pkgsrc
+##   installation
 ##
 ## - Does not allow the caller to specify LOCALBASE directly - this may
 ##   be set indirectly via PKG_INFO, for the duration of this shell script
@@ -33,24 +37,60 @@
 ##
 ## - Not to be confused with pkglint
 ##
+## - TBD/QA about the following output, singularly in a pkgsrc build on
+##   Linux/glibc:
+##   /usr/pkg/sbin/pkg_info: /usr/pkg/lib/libssl.so.1.0.0: no version information available (required by /usr/pkg/sbin/pkg_info)
+##   ... and whether or not this may indicate anything with regards to
+##   system overhed, in this process.
+##
 ## - This simple shell script does not provide any facilities for
 ##   pkg configuration management, pkg dependency graphing, or pkg
 ##   build+reinstall scripting
 ##
-##   - NB: for packages named such as py27-setuptools-<VERSION>
+##   - TBD exec under Linux taskset(1) or similar in BSD
+##     - TBD Linux taskset(1) and I/O scheduling; Similar in BSD
+##     - NB Linux cpufreq-info(1), cpufreq-set(1); TBD @ BSD
+##
+##   - TBD alleviating the exec() overhead, using UNIX fork and bmake as
+##     a dso, linked pre-fork (??) (NB: Would not, in itself, serve to
+##     alleviate the i/o overhead entailed in re-parsing the entire
+##     mk-files system for each installed port, plus anything being
+##     accessed by pkg_info during this processs)
+##
+##   - TBD multithreading in guile
+##     ref https://www.gnu.org/software/guile/manual/html_node/Scheduling.html
+##     ref for C-like programs https://www.gnu.org/software/guile/manual/html_node/Multi_002dThreading.html
+##
+##   - TBD pkg_mklib for guile (mklib extensions as a utility for pkgsrc)
+##
+##   - TBD mklib for guile (guile integration for bmake, under arbitrary
+##     mk-files systems)
+##
+##   - TBD shexeclib for guile (environment; I/O descriptors; stream parsing)
+##
+##   - TBD shparselib for guile (vis a vis the original awk; integration
+##     with shexeclib)
+##
+##   - TBD ptylib for guile (vis a vis pretty-printing in interactive
+##     logging messages)
+##
+##   - NB: For packages named such as py27-setuptools-<VERSION>
 ##     a notion of "Package variant" may be introduced. This would at
 ##     least be a concern for Python packages, and may be concern for
-##     other (PERL??). Of course, some builds may require a specific
-##     version other than that preferred in the local pkgsrc
-##     installation
+##     other packages built under variant configuration. Of course, some
+##     builds may require a specific version other than what would be
+##     preferred in the local pkgsrc installation, under any single
+##     configuration. This concept corresponds to the usage of MULTI
+##     variables, in pkgsrc.
 ##
 ##   - TBD: Concerning PKG_SUPPORTED_OPTIONS for each built port,
-##     add the value to BUILD_DEFS or store locally for each built pkg;
+##     add the value to BUILD_DEFS and/or store locally for each built pkg;
 ##     Notify systems manager on event of change in the list of
 ##     PKG_SUPPORTED_OPTIONS, for each installed pkg under a given
-##     LOCALBASE
+##     LOCALBASE (Binding Context: Port/Pkg, indep. of build-system
+##     schema or installation-system schema)
 ##
-##   - TBD: Provide an option -- for the duration of "Build time" -- to
+##   - TBD: Provide an option -- for a duration of "Build time" -- to
 ##     update build depends/tool depends and optionally, test depends,
 ##     for each "Mismatch" to the available pkgsrc version
 ##
