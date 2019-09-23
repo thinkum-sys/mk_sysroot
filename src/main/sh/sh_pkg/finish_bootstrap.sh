@@ -1,280 +1,184 @@
 #!/bin/sh
 
-## utility script - build LLVM stage-1 and stage-2 from pkgsrc bootstrap
-##
-## FIXME: Perform a full bootstrap, here.
-##        - Utilize a user-provided OBJHOSTNAME together w/ a set of
-##          local bootstrap mk.conf fragments, for purposes of systems
-##          management and automation when producing the initial
-##          bootstrap system and subsequent compiler system with host
-##          compiler and a build profile per OBJHOSTNAME
-##        - Consider extending for producing a cross-compile bootstrap
-##          from stage-0
+HOST_TOOLCHAIN=${HOST_TOOLCHAIN:-clang}
 
-## NB: Host toolchain configuation - LLVM on Debian 8
+## FIXME: set LOCALBASE local to this shell script
+## - needed for mozilla-rootcerts install [NB: wget]
+## - needed for local trust registry
+##   for GPG after mozilla-rootcerts install (TBD)
+## - see also: pkgsrc security/mozilla-rootcerts/MESSAGE
+## - NB security/mozilla-rootcerts-openssl
+##   is not normally installed under an unpriv. pkgsrc installation
 
-## NB: This script represents a general procedure,
-##     and has not been singularly tested, in itself
+PKG_CC=${PKG_CC:-${CC:-'clang-7'}}
+PKG_CXX=${PKG_CXX:-${CXX:-'clang++-7'}}
+PKG_CPP=${PKG_CPP:-${CPP:-'clang-cpp-7'}}
+PKG_LD=${PKG_LD:-${LD:-'ld.lld-7'}}
 
-## NB: This assumes that a bare minimum LOCALBASE is installed --
-## principally, a bare pkgsrc bootstrap filesystem -- and an appropriate
-## configuraton under the pkg 'etc' dir.
+FINISH_BOOTSTRAP_PKGS="pkgtools/libnbcompat
+ pkgtools/cwrappers
+ pkgtools/shlock
+ pkgtools/digest
+ sysutils/checkperms
+ devel/nbpatch"
 
-## FIXME: QA needed for stage-2 build failures with stage-1 built w/ GCC
-##
-## - Note that compiler-rt is being built under local config, in
-##   the stage-1 build. Use its rtlib in the stage 2 build? and subsq.
-##
-##   - works OK in local testing - libunwind stage-2 build, at least
-##
-##   - somehow fails in the llvm stage-2 buld
-##     > ld.lld: error: undefined symbol: vtable for __cxxabiv1::__si_class_type_info
-##
-##   - ?? rebuild all reverse dependencies for stage-2 ? (libxml2, python, ...)
-##     (NB: Minimal/No C++ code in those; python used a a tool in the
-##     build; rebuilding those does not fix the build failure)
-##
-##   - ?? symlink  pkg ld.lld to /usr/bin/ld - NB pkgsrc ld wrapper tools
-##     and host LD (??)
-##     ... viz a viz CMAKE_LINKER:FILEPATH=<WRKDIR>/.wrapper/bin/ld in
-##     the builds with pkgsrc
-##
-##     ... NB this requires admin. oprns. on the host, e.g in using the
-##     Debian dpkg-divert and update-alternatives tools for selecting an
-##     appropriate host 'ld' insofar as for the duration of the pkgsrc builds.
-##
-##     ... does not prevent the build failure
-##
-##    - ?? 'bmake clean configue' then patch CMAKE_LINKER:FILEPATH in
-##      port's build/CMakeCache.txt - substitute the path to ld.lld
-##      under LOCALBASE for the path to the pkgsrc ld wrapper
-##
-##      ... does not prevent the build failure
-##
-##    - ??
-##	CMAKE_ARGS	+=-DCMAKE_NM:FILEPATH=${LOCALBASE}/bin/llvm-nm
-##	CMAKE_ARGS	+=-DCMAKE_OBJDUMP:FILEPATH=${LOCALBASE}/bin/llvm-objdump
-##	CMAKE_ARGS	+=-DCMAKE_OBJCOPY:FILEPATH=${LOCALBASE}/bin/llvm-obcopy
-##
-##      ... useful, but does not prevent the build failure.
-##
-##   - ?? build with -DNO_LIBCXX (but compiler-rt)  when building on Debian 8 ??
-##
-##     ... slightly different build failure then
-##
-##     > ld.lld: error: undefined symbol: std::set_new_handler(void (*)())
-##
-##    - ?? build with -DNO_LIBCXX and no compiler-rt/rtlib on that platform ??
-##
-##    ... and once again:
-##
-##    > ld.lld: error: undefined symbol: vtable for __cxxabiv1::__si_class_type_info
-##
-##   !! and maybe dist-upgrade the host, insofar as kernel, GNU libc, ...
-##
-##   - NB: may provide scripting w/ precautions for 'bmake build package &&
-##     pkg_delete -f <PKGNAME> && pkg_add ...' for in-place port upgraade
-##     in stage-2 builds
-##
-##   - stage-2 build was not successful, even for libunwind, without the
-##     configuration resulting from -DWITH_COMPILER_RT as below
+LLVM_STAGE1_PKGS="lang/llvm
+ lang/clang
+ devel/lld"
 
-## NB: This script, in iteslf, does not provide support for build-
-##     logging or storage of other site maintenance data -- e.g storing
-##     the CMakeCache.txt for each LLVM component build, for later
-##     review, QA. Insofar as for build logging, there is the BSD script
-##     command and its approximate analogue in GNU tools
+## must specify each manually, to build the stage-2 pkg
+## using the stage-1 install - pursuant to installing the
+## entire set of stage-2 built pkgs, after stage-2 build
+## (thus, in effect, a reinstall)
+LLVM_STAGE2_PKGS="lang/llvm
+  lang/libcxxabi
+  lang/libcxx
+  lang/libunwind
+  lang/compiler-rt
+  lang/clang
+  devel/lld"
 
-## NB: This script does not provide any support for logging or analysis
-##     of build failures, during initial post-bootstrap, stage-1
-##     stage-2, or later "Host" builds.
-##
-## QA methodologies may vary, by site.
+THIS=$(readlink -f "$0")
+HERE=$(dirname "${THIS}")
+THIS=$(basename "${THIS}")
+
+msg(){
+  echo "#-- ${THIS:-$0} : $@"
+}
 
 set -e
 
-## NB: This default host CC configuration is for Debian 8
+msg "Finish bootstrap with host toolchain ${HOST_TOOLCHAIN} \
+- ${FINISH_BOOTSTRAP_PKGS}"
 
-## FIXME - LLVM 7, GCC 8 are both available in Debian 10
-## [needs testing with at least one of those host CC toolchains]
+for P in ${FINISH_BOOTSTRAP_PKGS}; do
+  msg "Build for in-place update: ${P}"
 
-HOST_CC_LLVM=${HOST_CC_LLVM:-clang-4.0}
-HOST_CXX_LLVM=${HOST_CXX_LLVM:-clang++-4.0}
-HOST_CPP_LLVM=${HOST_CPP_LLVM:-clang-cpp-4.0}
-HOST_LD_LLVM=${HOST_LD_LLVM:-ld.lld-4.0}
+  bmake -C /usr/pkgsrc/${P} build package \
+   CC="${PKG_CC}" CXX="${PKG_CXX}" CPP="${PKG_CPP}" LD="${PKG_LD}" \
+   USE_CWRAPPERS=no HOST_TOOLCHAIN=${HOST_TOOLCHAIN} || exit $?
 
-HOST_CC_GCC=${HOST_CC_GCC:-clang-4.0}
-HOST_CXX_GCC=${HOST_CXX_GCC:-clang++-4.0}
-HOST_CPP_GCC=${HOST_CPP_GCC:-clang-cpp-4.0}
-HOST_LD_GCC=${HOST_LD_GCC:-ld.lld-4.0}
-
-LOCALBASE="${LOCALBASE:-/usr/pkg}"
-PKGSRCDIR="${PKGSRCDIR:-/usr/pkgsrc}"
-
-LLVM_CCACHE_LINKDIR=${LOCALBASE}/libexec/llvm
-## NB: Cheap hack - hard-coding the relative path here
-CCACHE_RELPATH="../../ccache"
-LLD_RELPATH="../../lld"
-
-PKG_TGT=${PKG_TGT:-clean build package}
-INSTALL_TGT=${INSTALL_TGT:-install}
-CLEAN_TGT=${CLEAN_TGT:-clean}
-
-
-## Assumption: Site mk.conf provides mk-conf specifications dispatching
-## on HOST_TOOLCHAIN and/or PKGSRC_COMPILER to select an appropiate set
-## of specification for CC, CXX, CPP, LLD
-
-
-clean_after_build() {
-  local PORT=$1; shift
-  if [ "x${CLEAN_TGT}" != "x" ]; then
-     bmake -C ${PKGSRCDIR}/${PORT} ${CLEAN_TGT}
-  fi
-}
-
-build_llvm_1() {
-  local PORT=$1; shift
-  env CC="${HOST_CC_LLVM}" CXX="${HOST_CXX_LLVM}" CPP="${HOST_CPP_LLVM}" \
-    LD="${HOST_LD_LLVM}" bmake -C ${PKGSRCDIR}/${PORT} \
-    	${PKG_TGT} ${INSTALL_TGT} USE_CWRAPPERS=no HOST_TOOLCHAIN=clang &&
-    clean_after_build
-}
-
-build_llvm_2() {
-  local PORT=$1; shift
-  env CC="${HOST_CC_LLVM}" CXX="${HOST_CXX_LLVM}" CPP="${HOST_CPP_LLVM}" \
-    LD="${HOST_LD_LLVM}" bmake -C ${PKGSRCDIR}/${PORT} \
-    	${PKG_TGT} ${INSTALL_TGT} HOST_TOOLCHAIN=clang &&
-    clean_after_build
-}
-
-
-build_s1() {
-  local PORT=$1; shift
-  env CC="${HOST_CC_GCC}" CXX="${HOST_CXX_GCC}" CPP="${HOST_CPP_GCC}" \
-    LD="${HOST_LD_GCC}" bmake -C ${PKGSRCDIR}/${PORT} \
-    	build package install clean USE_CWRAPPERS=no HOST_TOOLCHAIN=gcc &&
-    clean_after_build
-  ## NB: This configuration has been tested, though not via this script,
-  ## per se
-
-  ## FIXME: Copy each build/CMakeCache.txt to maint. storage before clean_after_build
-}
-
-
-build_s2() {
-  local PORT=$1; shift
-  env PATH="${LLVM_CCACHE_LINKDIR}:${PATH}" \
-    CC="clang" CXX="clang++" CPP="clang-cpp" LD="ld.lld" \
-    bmake -C ${PKGSRCDIR}/${PORT} -DWITH_COMPILER_RT \
-    	build package clean USE_CWRAPPERS=no PKGSRC_COMPILER=clang &&
-    clean_after_build
-}
-
-## ---
-
-## Assumption: site mk.conf already updated
-
-## rebootstrap without cwrappers (or locking)
-##
-## NB mk.conf configured to prevent locking in these port builds
-##
-## Assumtion: mk.conf already configured for non-locking on these ports
-for P in  pkgtools/cwrappers pkgtools/shlock pkgtools/digest \
-                             sysutils/checkperms devel/nbpatch; do
-  build_llvm_1 $P || break
+  BUILT_PKG=$(bmake -C /usr/pkgsrc/${P} -D.MAKE.EXPAND_VARIABLES -V PKGFILE)
+  WHICH=$(bmake -C /usr/pkgsrc/${P} -D.MAKE.EXPAND_VARIABLES -V PKGNAME)
+  pkg_delete -f ${WHICH}
+#  bmake -C /usr/pkgsrc/${P} install
+  pkg_add ${BUILT_PKG}
 done
 
-## additional tools, previous to the stage 1 build
-for P in  net/wget; do
-  build_llvm_2 $P || break
+## ----------
+
+## NB: net/wget - substantial deps graph when building w/ openssl support
+## - needs fetch-script prelim, using host wget
+## - and subsq. host certs integration
+##
+## it's not all as simple as the shell cmd under a config:
+msg "Build net/wget"
+make -C /usr/pkgsrc/net/wget clean build package install \
+  HOST_TOOLCHAIN=${HOST_TOOLCHAIN} HOST_WGET=$(which wget)
+
+${LOCALBASE}/sbin/mozilla-rootcerts install
+
+## FIXME:
+## - Build ccache
+## - Create ccache storage dir
+## - Add stub ccache.conf under LOCALBASE
+
+## ----------
+
+## FIXME: Configure a libexec path for CCACHE and the host LLVM installation
+
+
+msg "Build LLVM stage-1, host toolchain - ${LLVM_STAGE1_PKGS}"
+
+for P in ${LLVM_STAGE1_PKGS}; do
+## FIXME: Use a PATH for CCACHE and the host LLVM installation
+  msg "Build LLVM stage-1 : $P"
+    env CCACHE_RECACHE=defined  bmake -C /usr/pkgsrc/${P} \
+    clean build package install \
+      USE_CWRAPPERS=no HOST_TOOLCHAIN=${HOST_TOOLCHAIN} || exit $?
 done
 
-## build stage-1 LLVM with host GCC, on Debian 8
-for P in lang/llvm lang/clang devel/lld; do
-  build_s1 $P || break
+## FIXME: Now store the stage-1 file - each PKGFILE - under a prefix
+## directory, along with the CMakeCache.txt for eaach. The set of
+## stage-1 PKGFILE would then be available for reverting the tolchain
+## to stage-2 on event of failure in or subsequent to the stage-2 build.
+## Furthermore, each CMakeCache.txt would then be available for review
+## as to the build configuration for the stage-1 build.
+
+## FIXME: stage-2 LLVM builds failing w/ local config on Debian 10,
+## some not until linking @ late in the build
+
+## NB: very long "Link time" for libclang.so in stage-1 build
+##     ... even when using LLD (Debian 8 LLVM 7 dist)
+##     ... with LLD runing on four CPUs
+##
+## Could this be in any ways improved with an appropriate configuration
+## for LLVM LTO?
+##
+## NB: Update config to use -nostdlib -- Linux Host, should not be
+## problematic elsewhere -- as something in the lld call for stage-1
+## is accessing /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.25
+## as well as [FIXME]
+## /lib/x86_64-linux-gnu/libz.so.1.2.11
+## /usr/lib/x86_64-linux-gnu/libffi.so.6.0.4
+## /usr/lib/x86_64-linux-gnu/libedit.so.2.0.59
+## ...
+## ... and somehow ...
+## /usr/lib/x86_64-linux-gnu/libbsd.so.0.9.1
+##
+## TBD: in the lang/lvm build
+##  - non user-settable (??) HAVE_LIBZ_Z:INTERNAL
+##  - user-settable FFI_LIBRARY_DIR & pkgsrc libffi + port needs build-dep update
+##  - user-settable ICONV_LIBRARY_PATH && pkgsrc converters/libiconv + port needs build-dep update
+##  ?? user-settable .. using GNU ld.gold (??) GOLD_EXECUTABLE (
+
+
+## FIXME: Configure a libexec path for CCACHE and the pkgsrc LLVM installation
+
+## then try building LLVM stage-2, using the resulting LLVM stage-1
+##
+## NB: mk-files config defaulting to using pkg LLVM (stage-1 at this time)
+
+msg "Build LLVM stage-2, LLVM toolchain in pkgsrc - ${LLVM_STAGE2_PKGS}"
+
+## NB: The stage-2 build should be linked onto pkgsrc libc++, libc++abi
+##     rather than host libc++, libc++abi
+
+for P in ${LLVM_STAGE2_PKGS}; do
+## FIXME: Use a PATH for CCACHE and the pkgsrc LLVM installation
+  msg "Build LLVM stage-2 : $P"
+
+  env CCACHE_RECACHE=defined bmake -C /usr/pkgsrc/${P} \
+    clean build package USE_CWRAPPERS=no || exit $?
+
+  BUILT_PKG=$(bmake -C /usr/pkgsrc/${P} -D.MAKE.EXPAND_VARIABLES -V PKGFILE)
+  WHICH=$(bmake -C /usr/pkgsrc/${P} -D.MAKE.EXPAND_VARIABLES -V PKGNAME)
+  pkg_delete -f ${WHICH}
+#  bmake -C /usr/pkgsrc/${P} install
+  pkg_add ${BUILT_PKG}
 done
 
-## additional tools, previous to the stage 2 build
-##
-## FIXME: Hard-coding the relative path for the symlinks, here
-## as a matter of simplicity, though it's not portable
-##
-## ASSUMPTION: Site has installed a ccache configuration at e.g the
-## pathname ${LOCALBASE}/etc/ccache.conf
-##
-## NB: Assuming it's a new ccache installation, it may not serve to
-## speed up the initial stage-2 build but should serve to speed up any
-## LLVM build subsequent of the stage-2 build.
-build_s1 devel/ccache &&
-  mkdir -p "${LLVM_CCACHE_LINKDIR}" &&
-  { ln -s ${CCACHE_RELPATH} clang;
-    ln -s ${CCACHE_RELPATH} clang++;
-    ln -s ${LLD_RELPATH} ld;
-  }
+## FIXME: For each LLVM_STAGE2_PKGS
+## also store the BUILDDIR/CMakeCache.txt
+
+## FIXME: if configured to, also run 'bmake clean' for each
+
+## FIXME: re-install the LLVM toolchain, from the stage-2 built pkgs
 
 
+##
+## subsq:
+## - ccache && add local libexec hack to filesystem and PATH
+## - tmux
+## - ...
 
-for P in lang/libunwind lang/llvm lang/clang \
-   lang/libcxxabi lang/libcxx lang/compiler-rt devel/lld; do
-  build_s2 $P || break
-done
-
-## NB: Manually installing rebuilt pkgs built within build_s2
-
-## -- QA/Remarks
-
-## FIXME/TBD: pkg zlib for all builds - compatibility with host bytecode
-
-## NB: Configure LD libexec/PATH hacks for host lld e.g ld.lld-4.0 in the next
+## subsq: ... userspace builds w/ LLVM stage-2
 ##
-## ... SECONDLY, build
-## lang/llvm lang/clang devel/lld
-## using host CC
-##
-## NB: Configure LD libexec/PATH HACKS for devel/lld in the following
-##
-## .. THIRDLY, build
-## lang/llvm lang/libunwind lang/libcxxabi lang/libcxx lang/compiler-rt devel/lld lang/clang
-## ... using pkg llvm, clang, lld
-##
-## NB: also openmp ...
-
-
-## NB: libtool breakage in the db4 build (in deps build for python 3.7) when configured for 'this'
-##
-## FIXME: libtool in the db4 build is using /usr/bin/ld even when nothing is configured for that
-##
-## ... and it cannot use ld.lld-4.0 from Debian 8 on Debian 8 ??
-## ... even when the compiler is clang-4.0
-##
-## FIXME: db4 build needs host GCC - for no too obvious reasoning
-##
-## ... and something needs to replace db4
-##
-## db6 any less broken? compiled with host CC and the lld-as-ld libexec/PATH hack
-##
-## .. it's not any less broken:
-# /usr/bin/ld: cannot find -lc++
-##
-## so, try ... re-building pkg libtool-base ? & then try to build db4 ?
-## (NO - trivial shell scripts)
-##
-## or try building db4 with host CC (LLVM, clang 4.0) and USE_CWRAPPERS=no ?
-## and no libtool '--tag' hack ...
-##
-## or try building it with explicit GNU libstdc++ usage? (still fails)
-##
-## NB: db4..db6 is not itself coded in c++ ?? it uses CC for build, but CXX
-## via libtool, for some linking @ e.g libdb6_cxx-6.2.la
-##
-## so, try building db6 w/ CC=clang++-4.0 (and no cwrappers) [nope]
-##
-## no cwrappers, no local libtool fix, and deb. lld as /usr/bin/ld ?
-## [still nope - broken tools infrast]
-##
-## ... OR: Just disable the bdb buildink3 deb in the python37 makefile
-## (broad but effective)
-
-
+## - sysutils/nbase
+## - ...
+## - tmux
+## - ...
+## - tig
+## - git...
+## - "Preferred editor"
+## - .... GNOME ....
