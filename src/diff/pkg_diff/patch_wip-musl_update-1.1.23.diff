@@ -16,6 +16,7 @@ The following concerns may be addressed in later changesets
       linker configuration for one or both of the host system and a
       pkg system under a single LOCALBASE - may vary by host system libc
       implementation
+    * NB:  -fuse-ld (clang/lld? NB autoconf, libtool, ...)
 
 * mk-file support for Common libc features when linking to musl libc e.g
   for CFLAFGS, LDFLAGS, and dynlib linker support - as might be common
@@ -49,7 +50,6 @@ The following concerns may be addressed in later changesets
       configuration extending of pkgsrc mk-files, along with
       descriptions of usage cases, specifications for build environment
       and test environment systems, etc.
-    * See also: LFS
 
 # Changeset Information
 
