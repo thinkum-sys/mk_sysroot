@@ -31,6 +31,10 @@
 
 ## --
 
+PKG_EARLY=
+
+## --
+
 APT_GET=$(which aptitude || which apt-get)
 
 ## --
@@ -50,15 +54,26 @@ err () {
  exit ${_ECODE:-1}
 }
 
+dgrep_for() {
+for P in $@; do
+  grep-status -n -sPackage \
+    -FPackage "${P}" -a \
+    -FStatus "install ok installed"
+done
+}
+
 set -e
 
 PKG_REQUIRED=$(grep-status -n -sPackage \
                -FStatus "install ok installed" \
                -a -FPriority required)
 
-PKG_LIBSIGCXX=$(grep-status -n -sPackage \
-                 -FPackage "libsigc++" \
-                 -a -FStatus "install ok installed")
+## ??
+# P_UP=$(grep-status -n -sPackage \
+#                 -FStatus "install ok installed" |
+#            grep-available -n -SVersion ...
+
+#PKG_LIBSIGCXX=$(dgrep_for "libsigc++")
 
 msg "Kernel: $(uname -a)"
 msg "Release:"
@@ -82,18 +97,6 @@ ${APT_GET} safe-upgrade -y ${PKG_REQUIRED}
 ## FIXME : If rebooting after the previous - this may require a certain
 ## degree of systems management infrastructure, to restart/continue the
 ## upgrade script after reboot.
-
-#if [ "x${PKG_LIBSIGCXX}" != "x" ]; then
-#msg "Full Install-Based Upgrade for GNU libsigc++ ${PKG_LIBSIGCXX}"
-## NB: safe-ugrade does nothing here. dist-upgrade similarly,
-##     ... and even this is useless:
-# ${APT_GET} --safe-resolver --allow-new-upgrades --allow-new-installs \
-#    install "${PKG_LIBSIGCXX}"
-## ... also useless:
-# ${APT_GET} --full-resolver --allow-new-upgrades --allow-new-installs \
-#    install "${PKG_LIBSIGCXX}"
-## So, this ....
-#fi
 
 #msg "Second Safe Upgrade for Required Packages (Allow New)"
 ## NB: Try to address a situation of the required-packages upgrade,
@@ -125,6 +128,37 @@ ${APT_GET} safe-upgrade -y ${PKG_REQUIRED}
 ##     to traverse its depdendencies graph to a point of a locally usable
 ##     "Upgrade Solution"
 
-msg "Safe Upgrade for Host  - Select Upgrades (No Fetch, No Install)"
+## TBD: Select for install on tags (needs filtering for "Manually Installed")
+##
+## e.g
+## grep-debtags -n -sPackage -FTag "devel::compiler" | xargs -n1 grep-status -n -sPackage -FStatus "install ok installed" -a -FPackage
+## ... slow but effectual, pursuant to the "Manually Installed" filter && ${APT_GET} install
 
+## TBD: Iterating per dpkg-architecture(1) ...
+
+
+# msg "Safe Upgrade for Host  - Reinstall perl-base"
+# ## NB: This would be useless at the cmdline.
+# ## Can it not resolve the dependencies withtout deb removals en masse?
+# ${APT_GET} --safe-resolver --allow-new-upgrades --allow-new-installs install \
+#   perl-base
+
+#msg "Safe Upgrade for Host  - Reinstall PERL"
+## NB: This would be useless at the cmdline.
+## Can it not resolve the dependencies withtout deb removals en masse?
+#${APT_GET} --safe-resolver --allow-new-upgrades --allow-new-installs install \
+#  perl-base perl-modules
+## ^ the "safe resolver" does nothing for those upgrades.
+## ^ the "full resolver" is by no means a solution
+
+## NB: libstd++6, libstdc++6:i386
+
+## Let it run, and see what non-solution it produces (??) is not a solution
+
+msg "Safe Upgrade for Host  - Reinstall Manually Installed Packages"
+apt-mark showmanual | xargs ${APT_GET} \
+ --safe-resolver --allow-new-upgrades --allow-new-installs install \
+
+
+msg "Safe Upgrade for Host  - Upgrades (No Fetch, No Install)"
 ${APT_GET} --schedule-only --allow-new-upgrades --allow-new-installs safe-upgrade
