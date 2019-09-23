@@ -101,7 +101,7 @@ export PATH MANPATH INFOPATH PKG_CONFIG_LIBDIR  # MAKESYSPATH
 ## -- CCACHE config-in-process-environment
 
 ## NB: Leaving CCACHE_PATH to a careful $PATH config
-##     such that can be modified in the build eviroment
+##     such that can be modified in the build evironment
 ##     to add any arbitray libexec/<NAME> symlinks dir @ host
 ##     during the build
 ##

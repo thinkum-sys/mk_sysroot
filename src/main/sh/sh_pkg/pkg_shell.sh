@@ -182,7 +182,7 @@ _pmk_var(){
   ## - Should fail with ERR_USAGE if provided with a WHENCE for which no
   ##   port system location can be determined
   ##
-  ## Know Issues
+  ## Known Issues
   ## - If a relative pathname having only one "/" is provided as WHENCE,
   ##   that value of WHENCE may be misconstrued as a PKGPATH not a
   ##   pathanme. It may be recommended that any pathname that may be
