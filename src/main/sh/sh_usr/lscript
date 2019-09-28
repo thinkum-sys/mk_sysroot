@@ -1,16 +1,50 @@
 #!/usr/bin/env bash
 
-## lscript 3.1 - log-oriented emulation for FreeBSD script(1)
-## w/ additional logging output and tai64n integration
+## lscript 3.2 - log-oriented emulation for FreeBSD script(1)
+## w/ additional output
 ##
 ##
 ## Remarks
+##
+## - This shell script provides a syntax analogous to the FreeBSD
+##   script(1) cmd, for FreeBSD script(1) or NetBSD-style script(1)
+##
+## - FreeBSD script(1) is supported only for FreeBSD operating systems.
+##
+## - This shell script is not supported on any FreeBSD installation in
+##   which the script(1) cmd was not installed
+##
+## - On other operating systems, this shell script will endeavor to
+##   locate the NetBSD script(1) cmd via either 'nb-script' or 'script'
+##   in PATH. If neither is available, the shell script will exit.
+##
+## - On all operating systems, if the SCRIPT environment variable is
+##   set, then this shell script will use the shell command denoted in
+##   SCRIPT as the effective script cmd. For FreeBSD operating systems,
+##   the SCRIPT cmd should support a syntax analogous to the FreeBSD
+##   script(1) cmd. For other operating systems, the SCRIPT cmd should
+##   support a syntax analogous to the NetBSD script(1) cmd.
+##
+## - NetBSD script(1) is available on non-FreeBSD operating systems,
+##   in the pkgsrc sysutils/nbase pkg. On FreeBSD operating systems, the
+##   pkgsrc sysutils/nbase pkg will typically not install the NetBSD
+##   script(1) cmd.
+##
+## - Debian operating systems may provide a fork of NetBSD script(1)
+##   cmd, available in the Debian bsdutils pkg. This script(1) cmd
+##   should be compatible with the NetBSD script(1) cmd, in so much as
+##   to allow for this shell script to use either, without modification.
+##
 ## - For purpose of producing an unambiguous log of the shell command
 ##   provided to this shell script, this shell script uses an extension
 ##   for printf(1) as developed in the BASH internal printf command -
 ##   namely, the "%q" format specifier. As such, this shell script may
 ##   fail when evaluated in any shell script interpreter not BASH, or in
 ##   any shell script interpreter not providing an analogous printf cmd.
+##
+## - This shell script will not provide any check for the existence of
+##   the log file denoted in the first argument to the shell script -
+##   leaving such test, in effect, to the respective script(1) cmd
 ##
 ## e.g tests
 ##
@@ -20,14 +54,6 @@
 
 _echo_hdr="echo -n \"#-- \""
 
-if [ -z "${ANNOTATE}" ]; then
-  ## NB: tai64n is available in pkgsrc PKGPATH=sysutils/daemontools
-  ANNOTATE=$(which tai64n)
-  if [ -z "${ANNOTATE}" ]; then
-    ANNOTATE=${CAT:-cat}
-  fi
-fi
-
 _OUTF="$1"; shift
 
 _CMD="$*"
@@ -36,7 +62,7 @@ _QCMD=$(printf "%q" "${_CMD}")
 _SCRIPT_CMD="${_echo_hdr}; echo ${_QCMD};
  ${_echo_hdr}; uname -a; ${_echo_hdr}; pwd;
  ${_echo_hdr}; date; ${_echo_hdr}; echo \${SHELL};
- exec ${_CMD} 2>&1 | ${ANNOTATE}"
+ exec ${_CMD}"
 
 case $(uname -o) in
     FreeBSD)
@@ -61,9 +87,9 @@ case $(uname -o) in
     FreeBSD)
         ## FreeBSD script(1)
         ## whence "-t 0" is analogous to nb-script(1) "-f"
-        exec "${SCRIPT}" -t 0 "${_OUTF}" "${SHELL}" -c "${_SCRIPT_CMD}"
+        exec ${SCRIPT} -t 0 "${_OUTF}" "${SHELL}" -c "${_SCRIPT_CMD}"
     ;;
     *)
-        exec "${SCRIPT}" -f -c "${_SCRIPT_CMD}" "${_OUTF}"
+        exec ${SCRIPT} -f -c "${_SCRIPT_CMD}" "${_OUTF}"
     ;;
 esac
