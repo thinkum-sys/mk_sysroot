@@ -45,8 +45,8 @@ if [ -z "${SCRIPT}" ]; then
             ## NB: FreeBSD script(1) is incompatible with this shell
             ## script version 3.1 - may be used directly, as an
             ## alternative to this shell script, when available.
-            THIS=$(basename $(readlink -f "$0"))
-            echo "#-- ${THIS}: cannot find nb-script in PATH" 1>&2
+            _THIS=$(basename $(readlink -f "$0"))
+            echo "#-- ${_THIS}: cannot find nb-script in PATH" 1>&2
             exit 1
         ;;
         *)
@@ -56,21 +56,18 @@ if [ -z "${SCRIPT}" ]; then
   fi
 
   if [ -z "${SCRIPT}" ]; then
-    THIS=$(basename $(readlink -f "$0"))
-    echo "#-- ${THIS}: cannot find nb-script or script in PATH" 1>&2
+    _THIS=$(basename $(readlink -f "$0"))
+    echo "#-- ${_THIS}: cannot find nb-script or script in PATH" 1>&2
     exit 1
   fi
 fi
 
-_script() {
-  local OUTF="$1"
-  shift
 
-  exec ${SCRIPT} -f \
-	-c  "${_echo_hdr}; echo $(printf "%q" "$*"); ${_echo_hdr}; uname -a; \
-${_echo_hdr}; pwd; ${_echo_hdr}; date; exec $* 2>&1 | ${ANNOTATE}" "${OUTF}"
+_OUTF="$1"; shift
 
-}
+_CMD=$(printf "%q" "$*")
 
+exec ${SCRIPT} -f \
+      -c  "${_echo_hdr}; echo \"${_CMD}\"; ${_echo_hdr}; uname -a; \
+${_echo_hdr}; pwd; ${_echo_hdr}; date; exec $* 2>&1 | ${ANNOTATE}" "${_OUTF}"
 
-_script "$@"
