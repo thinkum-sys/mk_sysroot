@@ -25,9 +25,8 @@ fi
 _OUTF="$1"; shift
 
 _CMD="$*"
-_QCMD=$(printf "%q" "${_CMD}")
 
-_SCRIPT_CMD="${_echo_hdr}; echo ${_QCMD};
+_SCRIPT_CMD="${_echo_hdr}; echo ${_CMD};
  ${_echo_hdr}; uname -a; ${_echo_hdr}; pwd;
  ${_echo_hdr}; date; ${_echo_hdr}; echo \${SHELL};
  exec ${_CMD} 2>&1 | ${ANNOTATE}"
