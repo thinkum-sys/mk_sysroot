@@ -11,23 +11,8 @@
 ##   namely, the "%q" format specifier. As such, this shell script may
 ##   fail when evaluated in any shell script interpreter not BASH, or in
 ##   any shell script interpreter not providing an analogous printf cmd.
-##
-## - TBD: How to port this to FreeBSD script(1) considering that
-##   nb-script(1) will not be available via pkgsrc sysutils/nbase, if
-##   only for any sysutils/nbase built on FreeBSD
-##
-## - TBD: "Weird output" w/ nb-script(1) absent of the '-q' arg, under
-##   non-TTY exec, e.g when exec w/ Emacs #'shell-command for
-##   nb-script in a pkgsrc build on Debian 10
-##
-##   ... not the same, with the Debian script(1) version of nb-script(1),
-##   the former as distributed in Debian 10 package 'bsdutils'
-##
-##   ... also not the same, when run directly from a shell on Debian 10
-##
-##    cf. isatty(3) [BSD; Linux] (??)
 
-_echo_hdr="echo -n '#-- '"
+_echo_hdr="echo -n \"#-- \""
 
 if [ -z "${ANNOTATE}" ]; then
   ## NB: tai64n is available in pkgsrc PKGPATH=sysutils/daemontools
@@ -37,37 +22,42 @@ if [ -z "${ANNOTATE}" ]; then
   fi
 fi
 
-if [ -z "${SCRIPT}" ]; then
-  SCRIPT=$(which nb-script)
-  if [ -z "${SCRIPT}" ]; then
-    case $(uname -o) in
-        FreeBSD)
-            ## NB: FreeBSD script(1) is incompatible with this shell
-            ## script version 3.1 - may be used directly, as an
-            ## alternative to this shell script, when available.
-            _THIS=$(basename $(readlink -f "$0"))
-            echo "#-- ${_THIS}: cannot find nb-script in PATH" 1>&2
-            exit 1
-        ;;
-        *)
-            SCRIPT=$(which script)
-        ;;
-    esac
-  fi
-
-  if [ -z "${SCRIPT}" ]; then
-    _THIS=$(basename $(readlink -f "$0"))
-    echo "#-- ${_THIS}: cannot find nb-script or script in PATH" 1>&2
-    exit 1
-  fi
-fi
-
-
 _OUTF="$1"; shift
 
-_CMD=$(printf "%q" "$*")
+_CMD="$*"
+_QCMD=$(printf "%q" "${_CMD}")
 
-exec ${SCRIPT} -f \
-      -c  "${_echo_hdr}; echo \"${_CMD}\"; ${_echo_hdr}; uname -a; \
-${_echo_hdr}; pwd; ${_echo_hdr}; date; exec $* 2>&1 | ${ANNOTATE}" "${_OUTF}"
+_SCRIPT_CMD="${_echo_hdr}; echo ${_QCMD};
+ ${_echo_hdr}; uname -a; ${_echo_hdr}; pwd;
+ ${_echo_hdr}; date; ${_echo_hdr}; echo \${SHELL};
+ exec ${_CMD} 2>&1 | ${ANNOTATE}"
 
+case $(uname -o) in
+    FreeBSD)
+        SCRIPT=${SCRIPT:-$(which script)}
+    ;;
+    *)
+      SCRIPT=${SCRIPT:-$(which nb-script)}
+      if [ -z "${SCRIPT}" ]; then
+        SCRIPT=${SCRIPT:-$(which script)}
+        if [ -z "${SCRIPT}" ]; then
+          _THIS=$(basename $(readlink -f "$0"))
+          echo "#-- ${_THIS}: cannot find nb-script or script in PATH" 1>&2
+          exit 1
+        fi
+      fi
+    ;;
+esac
+
+## NB: objects in the echo(1) output may not be as they appear to exec(3)
+
+case $(uname -o) in
+    FreeBSD)
+        ## FreeBSD script(1)
+        ## whence "-t 0" is analogous to nb-script(1) "-f"
+        exec "${SCRIPT}" -t 0 "${_OUTF}" "${SHELL}" -c "${_SCRIPT_CMD}"
+    ;;
+    *)
+        exec "${SCRIPT}" -f -c "${_SCRIPT_CMD}" "${_OUTF}"
+    ;;
+esac
