@@ -3,14 +3,6 @@
 ## lscript 3.1 - log-oriented emulation for FreeBSD script(1)
 ## w/ additional logging output and tai64n integration
 ##
-##
-## Remarks
-## - For purpose of producing an unambiguous log of the shell command
-##   provided to this shell script, this shell script uses an extension
-##   for printf(1) as developed in the BASH internal printf command -
-##   namely, the "%q" format specifier. As such, this shell script may
-##   fail when evaluated in any shell script interpreter not BASH, or in
-##   any shell script interpreter not providing an analogous printf cmd.
 
 _echo_hdr="echo -n \"#-- \""
 
