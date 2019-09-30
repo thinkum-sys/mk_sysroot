@@ -35,7 +35,7 @@ mk_sysroot (is not LFS)
 ## Platforms Tested - pkgsrc
 
 * Debian 8 (Linux 4.9.0) (amd64)
-    * Bootstrap toolchain: LLVM 4 (Debian 8)
+    * Bootstrap toolchain: clang and LLD, LLVM 4 (Debian 8)
     * Note: pkgsrc cwrappers disabled during bootstrap, built and
       enabled post-bootstrap (no locking, no cwrappers)
     * LLVM 4.0 from Debian 8 used for bootstrap; pkgsrc bootstrap script
@@ -57,6 +57,25 @@ mk_sysroot (is not LFS)
           descriptions of usage cases, build environment, and test
           environment characteristics
 
+* Debian 10 (Linux 5.2.0) (amd64)
+    * Bootstrap toolchain: clang and LLD, LLVM & (Debian 10)
+    * Note: LLVM 8 available in Debian Backports for Debian 10
+    * For building cmake with the host LLVM, if using LLVM libc++, the
+      Debian libc++ and libc++ 'dev' packages may be installed on the
+      host - e.g `libc++1-7` and `libc++-7-dev` such as corresponding
+      with Debian version-specific packages providing LLVM 7 e.g
+      `clang-7`, `llvm-7`, `lld-7`
+    * Note however. linking for libc++ on Linux may be problematic,
+      _at least for stage-1 LLVM builds_
+     [[some discussion](http://clang-developers.42468.n3.nabble.com/Making-libc-on-Linux-user-friendly-td4038688.html)]
+      (...)
+    * NB: Some "Fixups" may be needed for the host LLVM distribution on
+      Debian 10, e.g when testing libc++ in LLVM disributions on Debian:
+> `cd /usr/lib/llvm-7/lib/ && ln -s libc++abi.so.1 libc++abi.so`
+    * TBD: Availability of LLVM compiler-rt analysis tools, in Debian 10
+        * Note e.g the Debian package libclang-common-7-dev, providing
+          `/usr/lib/llvm-7/lib/clang/7.0.1/lib/linux/libclang_rt*`
+
 * FreeBSD 11.2 (amd64)
     * Bootstrap toolchain: LLVM 8 (FreeBSD ports)
     * Note: pkgsrc cwrappers disabled during bootstrap and subsequently
@@ -68,6 +87,12 @@ mk_sysroot (is not LFS)
     * Bootstrap toolchain: TBD - LLVM 6 available in chroot.
     * Tabled, while focusing on pkgsrc on amd64/Debian 8
     * See also: Termux builds, Debian packaging tools
+
+## Additional Remarks - Boostraping an LLVM Stage 1 Toolchain with Host LLVM
+
+* Some more notable dependencies in the build:
+    * CMake
+    * Python - using Python 3.7, per se
 
 ## Additional Remarks - Support Profiles
 
@@ -84,7 +109,7 @@ mk_sysroot (is not LFS)
     * Generalization -> Implementation
         * FreeBSD Jail Containers
         * Linux LXC
-          ([overview](https://linuxcontainers.org/lxc/introduction/#components) 
+          ([overview](https://linuxcontainers.org/lxc/introduction/#components)
           and [manual pages](https://linuxcontainers.org/lxc/manpages/))
         * Container Systems Post-Open Solaris (??)
         * Note: Android chroot as a subset of container filesystems
