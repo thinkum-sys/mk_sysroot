@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+if [ -z "${BASH_VERSION}" ]; then
+  _THIS=$(basename $(readlink -f "$0"))
+  echo "${_THIS:??}: Shell ${SHELL} not supported" 1>&2
+  echo "${_THIS:??}: This shell script requires BASH support" 1>&2
+  exit 1
+fi
+
+## NB: bashrc_pkg.sh is not presently compatible with shells other than
+## BASH. This is princially due to the use of BASH_SOURCE[] in the shell
+## resource.
+
+PREFIX=${PKGSRC_PREFIX:-/usr/pkg}
+
+. ${PREFIX}/etc/bashrc_pkg.sh
+
+exec ${PREFIX}/bin/emacs "$@"
+
