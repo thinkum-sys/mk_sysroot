@@ -59,10 +59,18 @@ _OUTF="$1"; shift
 _CMD="$*"
 _QCMD=$(printf "%q" "${_CMD}")
 
+# if [ -n "${SCRIPT_SHOPT}" ]; then
+# _SCRIPT_SHOPT="shopt ${SCRIPT_SHOPT};"
+# else
+# _SCRIPT_SHOPT=""
+# fi
+#
+#_SCRIPT_CMD="${_SCRIPT_SHOPT}${_echo_hdr}; echo ${_QCMD}; \
+
 _SCRIPT_CMD="${_echo_hdr}; echo ${_QCMD};
  ${_echo_hdr}; uname -a; ${_echo_hdr}; pwd;
  ${_echo_hdr}; date; ${_echo_hdr}; echo \${SHELL};
- exec ${_CMD}"
+ ${_CMD}"
 
 case $(uname -o) in
     FreeBSD)
