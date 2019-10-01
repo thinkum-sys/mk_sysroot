@@ -22,5 +22,5 @@ if [ -z "$@" ]; then
     exec ${PREFIX}/bin/emacsclient -nw
   fi
 else
-  exec ${PREFIX}/bin/emacsclient "$@"
+  exec ${PREFIX}/bin/emacsclient $*
 fi

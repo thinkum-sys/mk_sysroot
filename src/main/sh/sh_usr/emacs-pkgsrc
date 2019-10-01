@@ -15,5 +15,4 @@ PREFIX=${PKGSRC_PREFIX:-/usr/pkg}
 
 . ${PREFIX}/etc/bashrc_pkg.sh
 
-exec ${PREFIX}/bin/emacs "$@"
-
+exec ${PREFIX}/bin/emacs $*
