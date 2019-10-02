@@ -29,14 +29,14 @@ set -e
 MAKE=${MAKE:-bmake}
 
 PKGSRCDIR=${PKGSRCDIR:-/usr/pkgsrc}
-LOCALBASE=${LOCALBASE:-/usr/pkg}
-
+PREFIX=${PREFIX:-${PKGSRC_PREFIX:/usr/pkg}}
+##^ FIXME - Set a default PREFIX as an effective constant, before install
 
 ERR_USAGE=64 ## NB: EX_USAGE in BSD sysexits(3)
 
 ## --
 
-PKG_INFO=${PKG_INFO:-${LOCALBASE}/sbin/pkg_info}
+PKG_INFO=${PKG_INFO:-${PREFIX}/sbin/pkg_info}
 AWK=${AWK:-awk}
 
 ## --
@@ -69,13 +69,32 @@ _err() {
   _cerr 1 "$@"
 }
 
+_exit() {
+  exit $?
+}
+
+## --
+
+
+if [ -z "${BASH_SOURCE}" ]; then
+  ## NB This serves to indicate the actual SHELL, which may
+  ## not have been set, e.g when running under dash(1)
+  ## i.e running directly under a typical Debian /bin/sh
+  _uerr "Not supported for this shell: $(ps -p $$ c -o comm=)"
+fi
+
+## debug
+# _warn Using prefix ${PREFIX}
+
 ## --
 
 _qstr() {
   ## Output the set of arguments as a shell-quoted string
   ##
   ## NB: requires a BASH built-in printf extension
-  printf "%q" "$@"
+  ##
+  ## FIXME why is this resulting in an error under any BASH?
+  printf "%q" "$@" ## FIXME - this should work
 }
 
 _mk_var() {
@@ -106,7 +125,7 @@ _pkg_path_p() {
   # output PKGPATH for an available port
   local WHENCE="${1}"; shift
   local MULTI_VARS="$@"
-  _pmk_var "${WHENCE}" PKGPATH ${MULTI_VARS} || _uerr
+  _pmk_var "${WHENCE}" PKGPATH ${MULTI_VARS} || _err
 }
 
 
@@ -118,12 +137,15 @@ _pkg_path_i() {
   ## NAME must denote a versioned or unversioned package name, for an
   ## installed package
   local NAME="${1}"; shift
-  local OUT=$(${PKG_INFO} -Q PKGPATH "${NAME}")
-  if [ "x${OUT}" = "x" ]; then
-    _uerr "Unable to compute PKGPATH for pkg \"${NAME}\""
-  else
+  local OUT=$(${PKG_INFO} -Q PKGPATH "${NAME}") || _err
+#  if [ "x${OUT}" = "x" ]; then
+    ## FIXME
+    ## - This is not resulting in exit, when evaluated
+    ## - This should not need be an error, for any pkg with no MULTI defined
+#    _uerr "Unable to compute PKGPATH for pkg \"${NAME}\""
+#  else
     echo "${OUT}"
-  fi
+#  fi
 }
 
 
@@ -133,11 +155,12 @@ _pkg_multi_p() {
   local MK_OPTS="$@"
   local PPATH=$(_pkg_path_p "${WHENCE}")
   local OUT=$(_pmk_var "${PPATH}" MULTI ${MK_OPTS})
-  if [ "x${OUT}" = "x" ]; then
-    _uerr "Unable to compute MULTI parameters for port \"${WHENCE}\""
-  else
+#  if [ "x${OUT}" = "x" ]; then
+## NB: Not an error - mostly of interest for debugging
+#    _uerr "Unable to compute MULTI parameters for port \"${WHENCE}\""
+#  else
     echo "${OUT}"
-  fi
+#  fi
 }
 
 _pkg_multi_i() {
@@ -148,12 +171,13 @@ _pkg_multi_i() {
   ## NAME must denote a versioned or unversioned package name, for an
   ## installed package
   local NAME="${1}"; shift
-  local OUT=$(${PKG_INFO} -Q MULTI "${NAME}")
-  if [ "x${OUT}" = "x" ]; then
-    _uerr "Unable to compute MULTI parameters for \"${NAME}\""
-  else
+  local OUT=$(${PKG_INFO} -Q MULTI "${NAME}") || _err
+#  if [ "x${OUT}" = "x" ]; then
+## See previous
+#    _uerr "Unable to compute MULTI parameters for \"${NAME}\""
+#  else
     echo "${OUT}"
-  fi
+#  fi
 }
 
 
@@ -199,7 +223,7 @@ _pmk_var(){
   ##   of the MULTI variables defined in the installed package.
   ##
   ## - If provided with a package name as WHENCE, for any package
-  ##   that is not installed under the ${LOCALBASE} principally as being
+  ##   that is not installed under the ${PREFIX} principally as being
   ##   accesseed by ${PKG_INFO}, this function will be unable to compute
   ##   a port location for that package name. This may be addressed with
   ##   another programming system and any manner of a mklib and database
@@ -238,9 +262,14 @@ _pmk_var(){
   ## duplicate/conflicting MULTI variable names. "Caller beware"
   ##
     local PKGPATH=$(_pkg_path_i "${WHENCE}" ${MULTI_VARS})
-    if [ "x${PKGPATH}" = "x" ]; then
+    if [ -z "${PKGPATH}" ]; then
        ## Assumption: WHENCE *does not* denote an installed pkg
-      _uerr
+       ##
+       ## NB: This does not actually exit w/ error,
+       ## for any non-installed pkg name, as $?
+       ## from the failed pkg_info call will be
+       ## overwritten by the subsequent 'test'
+      _exit
     else
       MULTI_VARS="$(_pkg_multi_i "${WHENCE}") ${MULTI_VARS}"
       _emk_var "${PKGSRCDIR}/${PKGPATH}" "${VAR}" ${MULTI_VARS}
