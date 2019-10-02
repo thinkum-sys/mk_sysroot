@@ -1,4 +1,9 @@
-#!/bin/sh
+#!/usr/bin/env
+
+## FIXME - fails:
+# sh ./pkg_pkgpath verifypc
+## but
+# bash ./pkg_pkgpath verifypc
 
 _THIS_P=$(readlink -f "$0")
 _HERE=$(dirname "${_THIS_P}")

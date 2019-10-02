@@ -1,4 +1,4 @@
-## pkg_shell.sh - shell script utility functions for pkgsrc systems
+## pkg_shell - shell script utility functions for pkgsrc systems
 ##
 ## Version: 0.2
 ##
@@ -29,7 +29,7 @@ set -e
 MAKE=${MAKE:-bmake}
 
 PKGSRCDIR=${PKGSRCDIR:-/usr/pkgsrc}
-PREFIX=${PREFIX:-${PKGSRC_PREFIX:/usr/pkg}}
+PREFIX=${PREFIX:-${PKGSRC_PREFIX:-/usr/pkg}}
 ##^ FIXME - Set a default PREFIX as an effective constant, before install
 
 ERR_USAGE=64 ## NB: EX_USAGE in BSD sysexits(3)
@@ -139,9 +139,11 @@ _pkg_path_i() {
   local NAME="${1}"; shift
   local OUT=$(${PKG_INFO} -Q PKGPATH "${NAME}") || _err
 #  if [ "x${OUT}" = "x" ]; then
+    ##
     ## FIXME
-    ## - This is not resulting in exit, when evaluated
-    ## - This should not need be an error, for any pkg with no MULTI defined
+    ## - This does not need to denote an error,
+    ##   for any pkg with no MULTI defined
+    ##
 #    _uerr "Unable to compute PKGPATH for pkg \"${NAME}\""
 #  else
     echo "${OUT}"
@@ -277,9 +279,12 @@ _pmk_var(){
   fi
 }
 
+## -- main utility functions
+
 _pdistname() {
   local WHENCE="${1}"; shift
   local MULTI_VARS="$@"
+  _warn "Using ${WHENCE}"
   _pmk_var "${WHENCE}" DISTNAME ${MULTI_VARS} || _uerr
 }
 
@@ -291,6 +296,7 @@ _pdistname() {
 _pkg_name_p() {
   ## versioned package name for an available port
   local WHENCE="${1}"; shift
+  _warn "Using ${WHENCE}"
   local MULTI_VARS="$@"
   _pmk_var "${WHENCE}" PKGNAME ${MULTI_VARS} || _uerr
 }
@@ -301,6 +307,7 @@ _pkg_name_nover_p() {
  local MULTI_VARS="$@"
  local PKGFULL=$(_pkg_name_p "${WHENCE}" ${MULTI_VARS} || _uerr)
  local PKGVER=$(_pmk_var "${WHENCE}" PKGVERSION ${MULTI_VARS} || _uerr)
+  _warn "Using ${WHENCE}"
  echo "${PKGFULL%-${PKGVER}}"
 }
 
@@ -315,6 +322,7 @@ _pkg_name_nover_i() {
  local WHENCE="${1}"; shift
  local MULTI_VARS="$@"
  local PKGVER=$(_pmk_var "${WHENCE}" PKGVERSION ${MULTI_VARS} || _uerr)
+  _warn "Using ${WHENCE}"
  echo "${WHENCE%-${PKGVER}}"
 }
 
@@ -322,6 +330,7 @@ _pkg_pkgver_p() {
  ## package version (no package name) for an available port
  local WHENCE="${1}"; shift
  local MULTI_VARS="$@"
+  _warn "Using ${WHENCE}"
  _pmk_var "${WHENCE}" PKGVERSION ${MULTI_VARS} || _uerr
 }
 
@@ -342,5 +351,6 @@ _pkg_pkgver_i() {
  local PKGNAME=$(_pkg_name_nover_p "${WHENCE}" ${MULTI_VARS})
  local PKG_INAME=$(${PKG_INFO} -e "${PKGNAME}" ||
                        _uerr "Not installed? ${WHENCE}")
+  _warn "Using ${WHENCE}"
  echo "${PKG_INAME#${PKGNAME}-}"
 }

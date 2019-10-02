@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 _THIS_P=$(readlink -f "$0")
 _HERE=$(dirname "${_THIS_P}")

@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+
+## ** prototype **
+## recursive pkg dependency information
+
+_THIS_P=$(readlink -f "$0")
+_HERE=$(dirname "${_THIS_P}")
+_THIS=$(basename "${_THIS_P}")
+
+. "${_HERE}/pkg_shell.sh"
+
+_pkg_depends_p() {
+## list DEPENDS ports
+  local WHENCE="${1:-${PWD}}"; shift
+  local PPATH=$(_pkg_path_p "${WHENCE}" $@)
+  local MULTI_VARS="${@:-$(_pkg_multi_p "${WHENCE}" $@)}"
+  local PDEP=$(${MAKE} -D.MAKE.EXPAND_VARIABLES \
+                       -C "${PKGSRCDIR}/${PPATH}" \
+                 -V DEPENDS ${MULTI_VARS} $@)
+  local DEPPATH
+  for PSPEC in ${PDEP}; do
+    DEPPATH=$(echo $PSPEC | cut -d: -f2)
+    DEPPATH=$(readlink -f ${PKGSRCDIR}/${PPATH}/${DEPPATH})
+    echo ${DEPPATH#${PKGSRCDIR}/} ## may show duplicates e.g lang/python
+  done | sort | uniq
+## FIXME/TBD: Moar crude list hacking with regexps in bash
+}
+
+# _pkg_depends_i() {
+# ## shell-recursive pkg_info -n
+# }
+
+# _pkg_tool_depends_p() {
+# ## list TOOL_DEPENDS ports
+#  echo
+# }
+
+# _pkg_build_depends_p() {
+# ## list BUILD_DEPENDS ports
+#  echo
+# }
+
+# _pkg_test_depends_p() {
+# ## list TEST_DEPENDS ports
+#  echo
+# }
+
+_pkg_depends_p "$@"
+
