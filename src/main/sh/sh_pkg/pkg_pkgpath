@@ -1,8 +1,6 @@
-#!/usr/bin/env
+#!/usr/bin/env bash
 
-## FIXME - fails:
-# sh ./pkg_pkgpath verifypc
-## but
+## NB
 # bash ./pkg_pkgpath verifypc
 
 _THIS_P=$(readlink -f "$0")
