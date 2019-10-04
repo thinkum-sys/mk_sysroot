@@ -26,18 +26,18 @@
 
 set -e
 
-MAKE=${MAKE:-bmake}
+: ${MAKE=bmake}
+: ${PKGSRCDIR=/usr/pkgsrc}
+: ${PREFIX=${PKGSRC_PREFIX:-/usr/pkg}}
 
-PKGSRCDIR=${PKGSRCDIR:-/usr/pkgsrc}
-PREFIX=${PREFIX:-${PKGSRC_PREFIX:-/usr/pkg}}
 ##^ FIXME - Set a default PREFIX as an effective constant, before install
 
 ERR_USAGE=64 ## NB: EX_USAGE in BSD sysexits(3)
 
 ## --
 
-PKG_INFO=${PKG_INFO:-${PREFIX}/sbin/pkg_info}
-AWK=${AWK:-awk}
+: ${PKG_INFO=${PREFIX}/sbin/pkg_info}
+: ${AWK=awk}
 
 ## --
 
