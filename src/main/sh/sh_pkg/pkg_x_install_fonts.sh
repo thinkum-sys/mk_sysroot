@@ -9,7 +9,7 @@
 ##
 ## alternately [Indemnification Clause Here]
 ##
-##   pkg_x_install_fonts.sh NO_CHECKSUM=yes HOST_TOOLCHAIN=clang
+##   pkg_x_install_fonts.sh NO_CHECKSUM=yes
 ##
 ##
 ## TBD/FIXME
@@ -19,13 +19,20 @@
 
 set -e
 
-## NB:: fonts/noto-hinted-ttf => distfile file is 477M+ ?
+## TBD/Linting - fonts/noto-hinted-ttf => distfile size is 477M+ (??)
 
 CATEG=fonts
 
-LOCALBASE=${LOCALBASE:-/usr/pkgsrc}
+## configure the shell script environment for local pkgsrc builds
+PREFIX=${LOCALBASE:-${PREFIX:-${PKGSRC_PREFIX:-/usr/pkg}}}
+[ -e "${PREFIX}/etc/bashrc_pkg.sh" ] && . "${PREFIX}/etc/bashrc_pkg.sh"
 
-MK_TGTS=${MK_TGTS:-checksum package install}
+PKGSRCDIR=${PKGSRCDIR:-/usr/pkgsrc}
+
+## ...
+
+
+MK_TGTS=${MK_TGTS:-checksum package install clean}
 
 for F in ms \
 		liberation \
@@ -43,13 +50,13 @@ for F in ms \
 
     echo "#-- ${NAME}"
 
-    PORT_PATH=${LOCALBASE}/${CATEG}/${NAME}
+    PORT_PATH=${PKGSRCDIR}/${CATEG}/${NAME}
 
-    DISTNAME=$(bmake \
-                   -C ${PORT_PATH} -D.MAKE.EXPAND_VARIABLES -V DISTNAME ||
+    PKGNAME=$(bmake \
+                   -C ${PORT_PATH} -D.MAKE.EXPAND_VARIABLES -V PKGNAME ||
                    exit)
 
-    if pkg_info -c ${DISTNAME}; then
+    if pkg_info -e ${PKGNAME} > /dev/null; then
         echo "#-- ... already installed"
     else
       ${MAKE:-bmake} -C ${PORT_PATH} \
