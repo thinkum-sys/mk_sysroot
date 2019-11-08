@@ -1,0 +1,114 @@
+#!/usr/bin/env bash
+
+GROFF=${GROFF:-groff}
+PS2PDF=${PS2PDF:-ps2pdf}
+
+PAPER=${PAPER:-a4}
+
+ZCAT=${ZCAT:-zcat}
+CAT=${CAT:-cat}
+
+GREP=${GREP:-grep}
+SED=${SED:-sed}
+
+## --
+
+BMAKE=${BMAKE:-$(which bmake)}
+
+PKG_INFO=${PKG_INFO:-$(which pkg_info)}
+
+PKGSRCDIR=${PKGSRCDIR:-/usr/pkgsrc}
+
+LOCALBASE=${LOCALBASE:-${PKG_LOCALBASE}}
+
+PKG_MANDIR=${PKGMANDIR:-${PKG_MANDIR}}
+
+## ----------
+
+WHICH_PKG=${1};
+
+if [ -z "${WHICH_PKG}" ]; then
+    err "No package specified"
+fi
+
+WHITHER=${2:-${PWD}}
+
+
+## ----------
+
+_SCRIPTFILE=$(readlink -f "$0")
+#_SCRIPTDIR=$(dirname "${_SCRIPTFILE}")
+_SCRIPT=$(basename "${_SCRIPTFILE}")
+
+msg() {
+    echo "#-- ${_SCRIPT}: $@"
+}
+
+warn() {
+    msg "$@" 1>&2
+}
+
+err() {
+    warn "$@"
+    exit 1
+}
+
+
+PKG_LOCALBASE=$(pkg_info -Q LOCALBASE ${WHICH_PKG})
+if [ -z "${PKG_LOCALBASE}" ]; then
+    err "Unable to determine LOCALBASE for ${WHICH_PKG}"
+fi
+
+
+if [ -z "${PKG_MANDIR}" ]; then
+    if [ -n "${BMAKE}" ]; then
+        if [ -e "${PKGSRCDIR}" ]; then
+            PKG_MANDIR=$(${BMAKE} -D.MAKE.EXPAND_VARIABLES -C "${PKGSRCDIR}" -V PKGMANDIR)
+        else
+            err "PKGSRCDIR ${PKGSRCDIR}${PKGSRCDIR:+ }does not exist"
+        fi
+    else
+        err "Unable to determine PKGMANDIR, unable to locate bmake, BMAKE is unset"
+    fi
+
+    if [ -z "${PKG_MANDIR}" ]; then
+        err "Unable to determine PKGMANDIR for PKGSRCDIR ${PKGSRCDIR}"
+    fi
+fi
+
+## NB: substring expansion may be a feature not supported by all sh
+if [ "${PKG_MANDIR:0:1}" != "/" ]; then
+    ## Prepend PKG_LOCALBASE
+    PKG_MANDIR=${PKG_LOCALBASE}/${PKG_MANDIR}
+fi
+
+if ! [ -e "${PKG_MANDIR}" ]; then
+    err "PKGMANDIR ${PKG_MANDIR}${PKG_MANDIR:+ }does not exist"
+fi
+
+${PKG_INFO} -qL "${WHICH_PKG}" | ${GREP} "^${PKG_MANDIR}" | {
+    while read PATHNAME; do
+        FILENAME=$(basename "${PATHNAME}")
+
+        REFNAME=${FILENAME%%.gz}
+
+        if [ "${REFNAME}" != "${FILENAME}" ]; then
+            MANCAT=${ZCAT}
+        else
+            MANCAT=${CAT}
+        fi
+
+        OUTF="${WHITHER}/${REFNAME}.pdf"
+        if [ -e "${OUTF}" ]; then
+           err "Output file ${OUTF} exists"
+        fi
+
+        msg "Convert ${PATHNAME} to PDF"
+        ${MANCAT} "${PATHNAME}" |
+            ${GROFF} -mandoc -T ps -dpaper=${PAPER} -P-p${PAPER} |
+            ${PS2PDF} - ${OUTF} || {
+            ERR="$?" warn "Subprocess exited ${ERR}";
+            exit $ERR; }
+        msg "PDF written to ${OUTF}"
+    done
+}
