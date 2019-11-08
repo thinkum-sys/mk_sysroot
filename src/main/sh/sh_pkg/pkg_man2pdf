@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+##
+## shell environment parameters
+##
+
 GROFF=${GROFF:-groff}
 PS2PDF=${PS2PDF:-ps2pdf}
 
@@ -11,30 +15,11 @@ CAT=${CAT:-cat}
 GREP=${GREP:-grep}
 SED=${SED:-sed}
 
-## --
-
-BMAKE=${BMAKE:-$(which bmake)}
-
-PKG_INFO=${PKG_INFO:-$(which pkg_info)}
-
-PKGSRCDIR=${PKGSRCDIR:-/usr/pkgsrc}
-
-LOCALBASE=${LOCALBASE:-${PKG_LOCALBASE}}
-
-PKG_MANDIR=${PKGMANDIR:-${PKG_MANDIR}}
 
 ## ----------
-
-WHICH_PKG=${1};
-
-if [ -z "${WHICH_PKG}" ]; then
-    err "No package specified"
-fi
-
-WHITHER=${2:-${PWD}}
-
-
-## ----------
+##
+## script utility forms
+##
 
 _SCRIPTFILE=$(readlink -f "$0")
 #_SCRIPTDIR=$(dirname "${_SCRIPTFILE}")
@@ -53,8 +38,44 @@ err() {
     exit 1
 }
 
+## ----------
+##
+## pkg environment parameters
+##
 
-PKG_LOCALBASE=$(pkg_info -Q LOCALBASE ${WHICH_PKG})
+BMAKE=${BMAKE:-$(which bmake)} ||
+    err "Unable to locate bmake. Please set BMAKE or PATH for bmake"
+
+PKG_INFO=${PKG_INFO:-$(which pkg_info)} ||
+    err "Unable to locate pkg_info. Please set PKG_INFO or PATH for pkg_info"
+
+PKGSRCDIR=${PKGSRCDIR:-/usr/pkgsrc}
+
+LOCALBASE=${LOCALBASE:-${PKG_LOCALBASE}}
+
+PKG_MANDIR=${PKGMANDIR:-${PKG_MANDIR}}
+
+
+## ----------
+##
+## argv parameters
+##
+
+WHICH_PKG=${1};
+
+if [ -z "${WHICH_PKG}" ]; then
+    err "No package specified"
+fi
+
+WHITHER=${2:-${PWD}}
+
+
+## ----------
+##
+## main runtime
+##
+
+PKG_LOCALBASE=$(${PKG_INFO} -Q LOCALBASE ${WHICH_PKG})
 if [ -z "${PKG_LOCALBASE}" ]; then
     err "Unable to determine LOCALBASE for ${WHICH_PKG}"
 fi
@@ -76,7 +97,9 @@ if [ -z "${PKG_MANDIR}" ]; then
     fi
 fi
 
-## NB: substring expansion may be a feature not supported by all sh
+## NB: Substring expansion may be a feature not supported by all sh.
+##     Thus, this shell script uses BASH
+
 if [ "${PKG_MANDIR:0:1}" != "/" ]; then
     ## Prepend PKG_LOCALBASE
     PKG_MANDIR=${PKG_LOCALBASE}/${PKG_MANDIR}
